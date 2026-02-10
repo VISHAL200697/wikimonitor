@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Denied - WikiMonitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-900 text-gray-100 h-screen flex items-center justify-center font-sans">
+<div class="text-center">
+    <h1 class="text-6xl font-bold text-red-500 mb-4">403</h1>
+    <h2 class="text-2xl font-semibold mb-4">Access Denied</h2>
+    <p class="text-gray-400 mb-8">You do not have permission to view this page or your account is pending approval.
+    </p>
+    <div class="space-x-4">
+        <form class="inline" method="post" th:action="@{/logout}">
+            <button class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition"
+                    type="submit">
+                Logout
+            </button>
+        </form>
+    </div>
+</div>
+</body>
+
+</html>

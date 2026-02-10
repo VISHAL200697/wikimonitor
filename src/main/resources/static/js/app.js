@@ -1,0 +1,533 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
+    const eventList = document.getElementById('eventList');
+    const diffFrame = document.getElementById('diffFrame');
+    const welcomeMsg = document.getElementById('welcomeMessage');
+    const appLayout = document.querySelector('.app-layout');
+
+    // Header Elements
+    const currentWiki = document.getElementById('currentWiki');
+    const currentTitle = document.getElementById('currentTitle');
+    const mobileBackBtn = document.getElementById('mobileBackBtn');
+    const diffActions = document.getElementById('diffActions');
+    const connectionStatus = document.getElementById('connectionStatus');
+
+    // Controls
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const filterBtn = document.getElementById('filterBtn');
+    const filterModal = new bootstrap.Modal(document.getElementById('filterModal'));
+    const saveFilterBtn = document.getElementById('saveFilterBtn');
+    const filterCode = document.getElementById('filterCode');
+
+    let eventSource = null;
+
+    // --- SSE Connection ---
+    function connect() {
+        if (eventSource) return;
+        eventSource = new EventSource('/stream');
+
+        eventSource.onopen = () => {
+            if (connectionStatus) connectionStatus.classList.add('connected');
+        };
+
+        eventSource.onmessage = (event) => {
+            if (connectionStatus) connectionStatus.classList.add('connected');
+            const data = JSON.parse(event.data);
+            addEventToQueue(data);
+        };
+
+        eventSource.onerror = (err) => {
+            console.error('EventSource failed:', err);
+            if (connectionStatus) connectionStatus.classList.remove('connected');
+            eventSource.close();
+            eventSource = null;
+            setTimeout(connect, 5000);
+        };
+    }
+
+    function addEventToQueue(event) {
+        if (!event.flagged) return; // Only show flagged items based on previous logic
+
+        // Create Card
+        const card = document.createElement('div');
+        card.className = 'event-card flagged-card'; // Default to flagged style
+
+        // Calc Diff
+        const newLen = (event.length && event.length.new) || 0;
+        const oldLen = (event.length && event.length.old) || 0;
+        const diff = newLen - oldLen;
+        const diffStr = diff > 0 ? `+${diff}` : `${diff}`;
+        const diffClass = diff > 0 ? 'text-diff-pos' : (diff < 0 ? 'text-diff-neg' : 'text-diff-neu');
+
+        // Format Time
+        const time = new Date(event.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        card.innerHTML = `
+            <div class="d-flex justify-content-between mb-1">
+                <span class="badge bg-secondary" style="font-size: 0.7em;">${event.wiki}</span>
+                <small class="text-muted" style="font-size: 0.75em;">${time}</small>
+            </div>
+            <div class="card-title text-dark">${event.title}</div>
+            <div class="card-meta mt-1">
+                <span class="${diffClass}">${diffStr}</span>
+                <span class="text-truncate ms-2" style="max-width: 150px;">${event.user}</span>
+            </div>
+            <div class="small text-muted mt-1 text-truncate">${event.comment || ''}</div>
+        `;
+
+        // Actions Footer
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'card-actions mt-2 d-flex justify-content-between align-items-center pt-2 border-top';
+        actionsDiv.style.borderColor = 'rgba(0,0,0,0.05)';
+
+        // Links
+        const linksDiv = document.createElement('div');
+        linksDiv.className = 'd-flex gap-2';
+
+        const pageLink = `https://${event.server_name}/wiki/${encodeURIComponent(event.title)}`;
+        const userLink = `https://${event.server_name}/wiki/Special:Contributions/${encodeURIComponent(event.user)}`;
+
+        linksDiv.innerHTML = `
+            <a href="${pageLink}" target="_blank" class="btn btn-xs btn-outline-secondary" title="View Article" onclick="event.stopPropagation()">
+                <i class="bi bi-file-text"></i>
+            </a>
+            <a href="${userLink}" target="_blank" class="btn btn-xs btn-outline-secondary" title="User Contributions" onclick="event.stopPropagation()">
+                <i class="bi bi-person"></i>
+            </a>
+        `;
+
+        // Dismiss Button
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'btn btn-xs btn-outline-danger';
+        dismissBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
+        dismissBtn.title = 'Mark as Viewed';
+        dismissBtn.onclick = (e) => {
+            e.stopPropagation();
+            card.remove();
+        };
+
+        actionsDiv.appendChild(linksDiv);
+        actionsDiv.appendChild(dismissBtn);
+        card.appendChild(actionsDiv);
+
+        // Click Handler (Load Diff)
+        card.addEventListener('click', (e) => {
+            // Ignore if clicking links (handled by stopPropagation, but good to be safe)
+            if (e.target.tagName === 'A' || e.target.closest('a') || e.target.closest('button')) return;
+
+            // Remove active from others
+            document.querySelectorAll('.event-card.active').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+
+            loadDiff(event);
+        });
+
+        // Prepend to list
+        eventList.insertBefore(card, eventList.firstChild);
+
+        // Limit list size (keep DOM light)
+        if (eventList.children.length > 100) {
+            eventList.removeChild(eventList.lastChild);
+        }
+    }
+
+    function loadDiff(event) {
+        // Update Header
+        currentWiki.textContent = event.wiki;
+        currentTitle.textContent = event.title;
+
+        // Update Actions
+        if (diffActions) {
+            diffActions.innerHTML = '';
+            if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+                const undoBtn = document.createElement('button');
+                undoBtn.className = 'btn btn-sm btn-outline-warning';
+                undoBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Undo';
+                undoBtn.onclick = () => performUndo(event);
+                diffActions.appendChild(undoBtn);
+
+                const rollbackBtn = document.createElement('button');
+                rollbackBtn.className = 'btn btn-sm btn-outline-danger';
+                rollbackBtn.innerHTML = '<i class="bi bi-rewind-fill"></i> Rollback';
+                rollbackBtn.onclick = () => performRollback(event);
+                diffActions.appendChild(rollbackBtn);
+            }
+        }
+
+        // Show Iframe, Hide Welcome
+        welcomeMsg.classList.add('d-none');
+        diffFrame.classList.remove('d-none');
+
+        // Mobile: Slide to Diff View
+        appLayout.classList.add('showing-diff');
+
+        // Load Content
+        // Construct the internal API URL for diff
+        // Note: Reusing the existing /api/diff endpoint
+        const server = event.server_name;
+        const oldRev = event.revision?.old || 0;
+        const newRev = event.revision?.new;
+
+        if (!server || !newRev) {
+            diffFrame.srcdoc = '<div style="padding:20px; color:red;">Invalid revision data</div>';
+            return;
+        }
+
+        // We use srcdoc or direct fetch to inject styles? 
+        // Let's use the fetch approach from before but inject into the iframe document
+        // Actually, setting src to a controller endpoint that returns HTML is cleaner if we had one.
+        // But our /api/diff returns the table HTML fragment.
+        // We can write to the doc.
+
+        const doc = diffFrame.contentDocument || diffFrame.contentWindow.document;
+        doc.body.innerHTML = '<div style="padding:20px; font-family:sans-serif;">Loading...</div>';
+
+        fetch(`/api/diff?server=${server}&old=${oldRev}&new=${newRev}`)
+            .then(res => res.text())
+            .then(html => {
+                const head = `
+                    <head>
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+                         <link rel="stylesheet" href="https://www.mediawiki.org/w/load.php?modules=mediawiki.legacy.shared|mediawiki.diff.styles&only=styles">
+                        <style>
+                            body { background: #fff; padding: 10px; font-size: 0.9rem; }
+                            table.diff { width: 100%; }
+                        </style>
+                    </head>
+                `;
+                doc.open();
+                doc.write(head + '<body>' + html + '</body>');
+                doc.close();
+            })
+            .catch(err => {
+                doc.body.innerHTML = '<div style="padding:20px; color:red;">Error loading diff</div>';
+            });
+    }
+
+    function showToast(message, type = 'info') {
+        const toastContainer = document.querySelector('.toast-container');
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : (type === 'success' ? 'success' : 'primary')} border-0`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toastEl);
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+
+        toastEl.addEventListener('hidden.bs.toast', () => {
+            toastEl.remove();
+        });
+    }
+
+    // --- Undo Modal Logic ---
+    const undoModal = new bootstrap.Modal(document.getElementById('undoModal'));
+    const undoPageTitle = document.getElementById('undoPageTitle');
+    const undoSummaryInput = document.getElementById('undoSummary');
+    const confirmUndoBtn = document.getElementById('confirmUndoBtn');
+    let currentUndoEvent = null;
+
+    function performUndo(event) {
+        currentUndoEvent = event;
+        undoPageTitle.textContent = event.title;
+        undoSummaryInput.value = ''; // Reset summary
+        undoModal.show();
+    }
+
+    confirmUndoBtn.addEventListener('click', () => {
+        if (!currentUndoEvent) return;
+
+        const summary = undoSummaryInput.value.trim();
+        const event = currentUndoEvent;
+
+        const params = new URLSearchParams({
+            serverName: event.server_name,
+            title: event.title,
+            revision: event.revision.new
+        });
+
+        if (summary) {
+            params.append('summary', summary);
+        }
+
+        undoModal.hide();
+
+        fetch('/api/action/undo', { method: 'POST', body: params })
+            .then(res => {
+                if (res.ok) return res.json();
+                return res.json().then(json => { throw new Error(json.error || 'Unknown error'); });
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error.info || data.error.code || 'API Error');
+                }
+                if (data.edit && data.edit.result && data.edit.result !== 'Success') {
+                    throw new Error('Undo failed: ' + (data.edit.info || data.edit.result));
+                }
+                showToast('Undo successful', 'success');
+            })
+            .catch(err => showToast('Error: ' + err.message, 'error'));
+    });
+
+    function performRollback(event) {
+        if (!confirm(`Rollback edits by ${event.user} on "${event.title}"?`)) return;
+
+        const params = new URLSearchParams({
+            serverName: event.server_name,
+            title: event.title,
+            user: event.user
+        });
+
+        fetch('/api/action/rollback', { method: 'POST', body: params })
+            .then(res => {
+                if (res.ok) return res.json();
+                return res.json().then(json => { throw new Error(json.error || 'Unknown error'); });
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error.info || data.error.code || 'API Error');
+                }
+                // Rollback response usually doesn't have a 'result' field like edit, it just returns the rollback info or error
+                showToast('Rollback successful', 'success');
+            })
+            .catch(err => showToast('Error: ' + err.message, 'error'));
+    }
+
+    // --- Navigation (Mobile) ---
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.querySelector('.event-queue');
+
+    // Create Backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'menu-backdrop';
+    document.body.appendChild(backdrop);
+
+    function toggleMenu(show) {
+        if (show) {
+            sidebar.classList.add('show-menu');
+            backdrop.classList.add('show');
+        } else {
+            sidebar.classList.remove('show-menu');
+            backdrop.classList.remove('show');
+        }
+    }
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => toggleMenu(true));
+    }
+
+    backdrop.addEventListener('click', () => toggleMenu(false));
+
+    // Update loadDiff to close menu on mobile
+    // Helper wrapper so we don't redefine the main function logic repeatedly or confusingly
+    const originalLoadDiff = loadDiff;
+
+    // We can't easily redefine loadDiff here because it's defined in the scope above.
+    // Instead, let's just create a new function and assign it if we could, but 'function loadDiff' is hoisted or const.
+    // It's defined as 'function loadDiff' so it is hoisted.
+
+    // Actually, simpler approach: modify the click handler in addEventToQueue to call toggleMenu(false)
+    // AND modify loadDiff to NOT deal with 'showing-diff' class anymore.
+
+    // Let's rewrite the click handler in addEventToQueue by redefining the addEventToQueue function? 
+    // No, that's too big.
+
+    // Let's just override the mobileBackBtn listener (which we are replacing)
+    // AND we need to handle the fact that 'loadDiff' adds 'showing-diff'.
+    // We should remove the 'showing-diff' logic from loadDiff or nullify its effect in CSS (which we did).
+
+    // We need to ensure that when a card is clicked, the menu closes.
+    // Since card click calls loadDiff, let's monkey-patch loadDiff? 
+    // No, cleaner to just change the logic in a separate replacement if needed.
+
+    // Wait, the previous plan said "Remove .show-menu on item click".
+    // I can stick a global listener on eventList?
+    eventList.addEventListener('click', (e) => {
+        if (e.target.closest('.event-card')) {
+            toggleMenu(false);
+        }
+    });
+
+
+    // --- Controls ---
+    pauseBtn.addEventListener('click', () => {
+        fetch('/api/pause', { method: 'POST' });
+        pauseBtn.style.display = 'none';
+        resumeBtn.style.display = 'inline-block';
+    });
+
+    resumeBtn.addEventListener('click', () => {
+        fetch('/api/resume', { method: 'POST' });
+        resumeBtn.style.display = 'none';
+        pauseBtn.style.display = 'inline-block';
+    });
+
+    // --- CodeMirror Setup ---
+    const knownProperties = [
+        'id', 'type', 'namespace', 'title', 'pageId', 'titleUrl', 'user', 'comment', 'parsedcomment',
+        'timestamp', 'wiki', 'bot', 'minor', 'patrolled', 'notifyUrl', 'serverUrl', 'serverName',
+        'serverScriptPath', 'server_name', 'server_url', 'server_script_path', 'title_url',
+        'notify_url', 'added_lines', 'removed_lines', 'user_name', 'page_namespace', 'old_size',
+        'user_rights', 'user_groups'
+    ];
+
+    const knownFunctions = [
+        'contains', 'containsIgnoreCase', 'startsWith', 'endsWith', 'equals', 'equalsIgnoreCase',
+        'length', 'isEmpty', 'isBlank', 'matches', 'regexCount', 'count', 'lower', 'upper', 'trim',
+        'removeWhitespace', 'normalizeArabic', 'in', 'anyContains', 'allContains', 'hour',
+        'dayOfWeek', 'isNightTime', 'test'
+    ];
+
+    const keywords = ['true', 'false', 'null', 'and', 'or', 'not', 'new']; // SpEL keywords
+
+    let cmEditor = null;
+
+    if (document.getElementById('filterCode')) {
+        cmEditor = CodeMirror.fromTextArea(document.getElementById('filterCode'), {
+            mode: 'javascript', // SpEL is similar enough
+            lineNumbers: true,
+            lint: {
+                getAnnotations: validateSpEL,
+                async: false
+            },
+            extraKeys: {
+                "Ctrl-Space": "autocomplete"
+            },
+            hintOptions: {
+                completeSingle: false,
+                hint: spelHint
+            }
+        });
+
+        cmEditor.on('inputRead', (cm, change) => {
+            if (change.text[0].match(/[a-zA-Z]/)) {
+                cm.showHint();
+            }
+        });
+    }
+
+    function spelHint(cm) {
+        const cur = cm.getCursor();
+        const token = cm.getTokenAt(cur);
+        const start = token.start;
+        const end = cur.ch;
+        const word = token.string.slice(0, end - start);
+
+        const list = [];
+
+        // Add properties
+        knownProperties.forEach(p => {
+            if (p.startsWith(word)) list.push({ text: p, displayText: p + ' (var)' });
+        });
+
+        // Add functions
+        knownFunctions.forEach(f => {
+            if (f.startsWith(word)) list.push({ text: f + '()', displayText: f + '()' });
+        });
+
+        // Add keywords
+        keywords.forEach(k => {
+            if (k.startsWith(word)) list.push({ text: k, displayText: k });
+        });
+
+        return {
+            list: list,
+            from: CodeMirror.Pos(cur.line, start),
+            to: CodeMirror.Pos(cur.line, end)
+        };
+    }
+
+    function validateSpEL(text) {
+        const found = [];
+        if (!text) return found;
+
+        // Simple tokenizer/scanner to find unknown identifiers
+        // This is a naive implementation, a real parser would be better but complex in JS for SpEL
+
+        // We split by non-identifier chars roughly
+        // But we need to respect strings
+
+        const lines = text.split('\n');
+
+        lines.forEach((line, i) => {
+            let currentLine = line;
+
+            // Remove strings
+            currentLine = currentLine.replace(/'[^']*'/g, '""').replace(/"[^"]*"/g, '""');
+
+            // Remove comments (basic # support)
+            const commentIdx = currentLine.indexOf('#');
+            if (commentIdx !== -1) currentLine = currentLine.substring(0, commentIdx);
+
+            // Find identifiers
+            // Regex for valid java identifier start + parts
+            const regex = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g;
+            let match;
+            while ((match = regex.exec(currentLine)) !== null) {
+                const word = match[0];
+                const col = match.index;
+
+                // Check if known
+                if (!knownProperties.includes(word) &&
+                    !knownFunctions.includes(word) &&
+                    !keywords.includes(word)) {
+
+                    found.push({
+                        from: CodeMirror.Pos(i, col),
+                        to: CodeMirror.Pos(i, col + word.length),
+                        message: "Unknown variable or function: " + word,
+                        severity: "error"
+                    });
+                }
+            }
+        });
+
+        return found;
+    }
+
+    // Update filterBtn to refresh CM
+    filterBtn.addEventListener('click', () => {
+        filterModal.show();
+        fetch('/api/filter/code')
+            .then(res => res.text())
+            .then(code => {
+                if (cmEditor) {
+                    cmEditor.setValue(code || '');
+                    setTimeout(() => cmEditor.refresh(), 200); // Fix rendering issues in modal
+                } else {
+                    filterCode.value = code;
+                }
+            });
+    });
+
+    saveFilterBtn.addEventListener('click', () => {
+        const code = cmEditor ? cmEditor.getValue() : filterCode.value;
+        fetch('/api/filter/code', { method: 'POST', body: code })
+            .then(res => {
+                if (res.ok) {
+                    saveFilterBtn.textContent = 'Saved!';
+                    saveFilterBtn.classList.replace('btn-primary', 'btn-success');
+                    setTimeout(() => {
+                        saveFilterBtn.textContent = 'Save Script';
+                        saveFilterBtn.classList.replace('btn-success', 'btn-primary');
+                        filterModal.hide();
+                    }, 1000);
+                }
+            });
+    });
+
+    // Start
+    connect();
+
+});

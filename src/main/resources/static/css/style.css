@@ -1,0 +1,218 @@
+:root {
+    --bg-color: #f8fafc;
+    --text-color: #0f172a;
+    --border-color: #e2e8f0;
+    --sidebar-width: 350px;
+    --highlight-bg: #eff6ff;
+    --danger-bg: rgba(239, 68, 68, 0.1);
+    --success: #16a34a;
+    --danger: #dc2626;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    /* App handles scrolling */
+    background-color: var(--bg-color);
+}
+
+.app-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    /* Reverse row to put Sidebar (second child in HTML usually, or first if we swapped) 
+       Wait, I put Sidebar second in HTML. 
+       If I want Right Sidebar:
+       Default flex-direction: row puts children Left -> Right.
+       HTML: [DiffViewer] [Sidebar]
+       This naturally places Sidebar on Right.
+    */
+    flex-direction: row;
+}
+
+/* --- Sidebar (Queue) --- */
+.event-queue {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background: #ffffff;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.queue-list {
+    overflow-y: auto;
+}
+
+/* Event Card Logic */
+.event-card {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.event-card:hover {
+    background-color: #f1f5f9;
+}
+
+.event-card.active {
+    background-color: var(--highlight-bg);
+    border-left: 4px solid #3b82f6;
+}
+
+.event-card.flagged-card {
+    background-color: rgba(254, 242, 242, 0.7);
+    /* Red tint */
+}
+
+.event-card.flagged-card:hover {
+    background-color: rgba(254, 226, 226, 1);
+}
+
+.event-card.flagged-card.active {
+    background-color: rgba(254, 202, 202, 0.5);
+    border-left-color: var(--danger);
+}
+
+
+/* Text Utilities */
+.text-diff-pos {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.text-diff-neg {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.text-diff-neu {
+    color: #64748b;
+}
+
+.card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+.card-meta {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* --- Main Area (Diff Viewer) --- */
+.diff-viewer {
+    flex: 1;
+    /* Takes remaining space */
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Prevents flex overflow */
+    background: #fff;
+}
+
+.diff-header {
+    height: 50px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    z-index: 5;
+}
+
+/* MediaWiki Diff Override in Iframe (if we could inject CSS) 
+   But mainly checking iframe container 
+*/
+iframe {
+    background: #fff;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    .app-layout {
+        position: relative;
+    }
+
+    /* Adjust Header for Mobile */
+    .diff-header {
+        height: auto;
+        min-height: 50px;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .global-controls {
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    /* Off-Canvas Sidebar */
+    .event-queue {
+        position: fixed;
+        width: 85%;
+        /* Drawer width */
+        max-width: 350px;
+        top: 0;
+        bottom: 0;
+        right: -100%;
+        /* Hidden by default */
+        z-index: 1000;
+        transition: right 0.3s ease-in-out;
+        border-left: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        border-right: none;
+    }
+
+    .event-queue.show-menu {
+        right: 0;
+        /* Slide in */
+    }
+
+    .diff-viewer {
+        display: flex !important;
+        /* Always visible behind menu */
+        width: 100%;
+        position: relative;
+        /* Default flow */
+        z-index: 1;
+    }
+
+    .mobile-hidden {
+        display: none !important;
+    }
+
+    /* Backdrop for menu */
+    .menu-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 900;
+        display: none;
+    }
+
+    .menu-backdrop.show {
+        display: block;
+    }
+}
+
+/* Extra Small Buttons for Card Actions */
+.btn-xs {
+    padding: 0.1rem 0.4rem;
+    font-size: 0.75rem;
+    border-radius: 0.2rem;
+}
