@@ -25,9 +25,9 @@ public class WikiMonitorApplication {
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) throws Exception {
-        Dotenv dotenv = Dotenv.configure()
-        .ignoreIfMissing()
-        .load();
+        dotenv = Dotenv.configure()
+                .ignoreIfMissing()
+                .load();
 
         context = SpringApplication.run(WikiMonitorApplication.class, args);
     }
