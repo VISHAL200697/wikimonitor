@@ -1,24 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="LOG_PATH" value="logs"/>
+    <property name="LOG_PATH" value="${APP_HOME:-.}/logs"/>
     <property name="APP_NAME" value="wikimonitor"/>
 
     <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- Current log file -->
         <file>${LOG_PATH}/${APP_NAME}.log</file>
 
-        <!-- Daily rolling policy -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- New file every day -->
             <fileNamePattern>
                 ${LOG_PATH}/${APP_NAME}.%d{yyyy-MM-dd}.log
             </fileNamePattern>
 
-            <!-- Keep logs for 30 days -->
             <maxHistory>30</maxHistory>
-
-            <!-- Optional: total size cap -->
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
 
