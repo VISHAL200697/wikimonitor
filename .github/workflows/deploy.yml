@@ -7,14 +7,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    environment: production
+
     permissions:
       contents: write
-
-    # Allow only users with write permission or site admins
-    if: |
-      github.actor != 'dependabot[bot]' &&
-      (github.event.sender.site_admin == true ||
-       github.event.sender.permissions.push == true)
 
     steps:
       - name: Checkout repository
@@ -30,7 +26,7 @@ jobs:
       - name: Build application
         run: mvn -B -ntp clean package
 
-      - name: Upload JAR to server
+      - name: Upload JAR to Toolforge
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
@@ -40,14 +36,18 @@ jobs:
           source: "target/wikimonitor.jar"
           target: "/data/project/wikimonitor"
 
-      - name: Restart application
+      - name: Restart Toolforge webservice
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           port: 22
           key: ${{ secrets.KEY }}
+          request_pty: true
+          script_stop: true
           script: |
             become wikimonitor bash -c "
+              set -e
               toolforge webservice stop
-              toolforge webservice jdk17 start /data/project/wikimonitor/runapp"
+              toolforge webservice jdk17 start /data/project/wikimonitor/runapp
+            "
