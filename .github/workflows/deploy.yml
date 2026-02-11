@@ -35,7 +35,8 @@ jobs:
           key: ${{ secrets.KEY }}
           source: "target/wikimonitor.jar"
           target: "/data/project/wikimonitor"
-
+          strip_components: 1
+              
       - name: Restart Toolforge webservice
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -47,7 +48,5 @@ jobs:
           script_stop: true
           script: |
             become wikimonitor bash -c "
-              set -e
-              toolforge webservice stop
-              toolforge webservice jdk17 start /data/project/wikimonitor/runapp
-            "
+              toolforge webservice stop;
+              toolforge webservice jdk17 start /data/project/wikimonitor/runapp"
