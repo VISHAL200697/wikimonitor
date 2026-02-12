@@ -19,7 +19,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @EnableScheduling
 @lombok.extern.slf4j.Slf4j
 public class WikiMonitorApplication {
-    public static final String userAgent = "WikiMonitor/1.0";
+    public static String version = "1.0.0";
+    public static String userAgent = "WikiMonitor/" + version;
+
+    @org.springframework.beans.factory.annotation.Value("${app.version}")
+    private String appVersion;
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        version = appVersion;
+        userAgent = "WikiMonitor/" + version + " (https://phabricator.wikimedia.org/project/profile/8514/)";
+    }
     private static final Map<String, ActionApi> actionApis = new ConcurrentHashMap<>();
     private static Dotenv dotenv;
     private static ConfigurableApplicationContext context;
