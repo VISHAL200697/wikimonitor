@@ -23,457 +23,443 @@
             }
         }
     </script>
+    <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
 </head>
 
 <body class="bg-slate-900 text-gray-100 min-h-screen font-sans">
 
-<nav class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            <div class="flex items-center">
-                <a class="text-xl font-bold text-emerald-400" href="/">WikiMonitor</a>
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                           href="/">Map</a>
-                        <a class="bg-slate-900 text-white px-3 py-2 rounded-md text-sm font-medium"
-                           href="/wiki">Documentation</a>
-                        <a class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium" href="/admin"
-                           sec:authorize="hasRole('ADMIN')">Admin</a>
+    <nav class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a class="text-xl font-bold text-emerald-400" href="/">WikiMonitor</a>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                href="/">Map</a>
+                            <a class="bg-slate-900 text-white px-3 py-2 rounded-md text-sm font-medium"
+                                href="/wiki">Documentation</a>
+                            <a class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                href="/admin" sec:authorize="hasRole('ADMIN')">Admin</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div>
-                <form method="post" th:action="@{/logout}">
-                    <button class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                <div>
+                    <form method="post" th:action="@{/logout}">
+                        <button class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
                             type="submit">Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- Sidebar Navigation -->
-        <div class="lg:col-span-1">
-            <div class="sticky top-24 space-y-4">
-                <h3 class="text-lg font-semibold text-white uppercase tracking-wider">Contents</h3>
-                <nav class="flex flex-col space-y-2">
-                    <a class="text-gray-400 hover:text-emerald-400 transition" href="#variables">Variables</a>
-                    <a class="text-gray-400 hover:text-emerald-400 transition" href="#string-functions">String
-                        Functions</a>
-                    <a class="text-gray-400 hover:text-emerald-400 transition" href="#regex-functions">Regex
-                        Functions</a>
-                    <a class="text-gray-400 hover:text-emerald-400 transition" href="#list-functions">List
-                        Functions</a>
-                    <a class="text-gray-400 hover:text-emerald-400 transition" href="#time-functions">Time
-                        Functions</a>
-                    <a class="text-gray-400 hover:text-emerald-400 transition" href="#examples">Examples</a>
-                </nav>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="lg:col-span-3 space-y-12">
-
-            <section id="variables">
-                <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Variables</h2>
-                <p class="text-gray-400 mb-6">These variables represent properties of the recent change event. You
-                    can use them in your filter expressions.</p>
-
-                <div class="bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
-                    <table class="min-w-full divide-y divide-slate-700">
-                        <thead class="bg-slate-700">
-                        <tr>
-                            <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Variable
-                            </th>
-                            <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Type
-                            </th>
-                            <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Description
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-700">
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">user</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Username or IP of the editor.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">title</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Title of the page.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">comment</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Edit summary/comment.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">wiki</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Database name of the wiki (e.g.,
-                                'enwiki').
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">type</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Type of change ('edit', 'new', 'log',
-                                etc.).
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">namespace</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Integer</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Namespace ID of the page.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">bot</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">True if the edit was made by a bot.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">minor</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">True if marked as a minor edit.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">added_lines</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Content of lines added in this edit.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">removed_lines</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Content of lines removed in this edit.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">user_groups</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">List&lt;String&gt;</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">List of user groups (e.g., 'sysop',
-                                'bot').
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">user_rights</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">List&lt;String&gt;</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">List of user rights.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">id</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Long</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Event ID.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">page_id</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Long</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">ID of the page.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">title_url</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">URL of the page title.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">parsedcomment</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Parsed edit summary (HTML).</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">timestamp</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Long</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Timestamp of the edit.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">patrolled</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">True if the edit was patrolled.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">notify_url</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">URL for notifications.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">server_url</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Base URL of the server.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">server_name</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Hostname of the server.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">server_script_path</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Path to the server script.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">flagged</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Internal flag (true if flagged by
-                                filter).
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">abuseType</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Internal abuse type classification.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">user_name</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">String</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Alias for 'user'.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">page_namespace</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Integer</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Alias for 'namespace'.</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-emerald-400">old_size</td>
-                            <td class="px-6 py-4 text-sm text-gray-400">Long</td>
-                            <td class="px-6 py-4 text-sm text-gray-300">Size of the page before the edit.</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                        </button>
+                    </form>
                 </div>
-            </section>
+            </div>
+        </div>
+    </nav>
 
-            <section id="string-functions">
-                <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">String Functions</h2>
-                <div class="grid gap-6">
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">contains(text, value)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> contains
-                            <code>value</code> (case-sensitive).
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">contains(title,
+    <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar Navigation -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24 space-y-4">
+                    <h3 class="text-lg font-semibold text-white uppercase tracking-wider">Contents</h3>
+                    <nav class="flex flex-col space-y-2">
+                        <a class="text-gray-400 hover:text-emerald-400 transition" href="#variables">Variables</a>
+                        <a class="text-gray-400 hover:text-emerald-400 transition" href="#string-functions">String
+                            Functions</a>
+                        <a class="text-gray-400 hover:text-emerald-400 transition" href="#regex-functions">Regex
+                            Functions</a>
+                        <a class="text-gray-400 hover:text-emerald-400 transition" href="#list-functions">List
+                            Functions</a>
+                        <a class="text-gray-400 hover:text-emerald-400 transition" href="#time-functions">Time
+                            Functions</a>
+                        <a class="text-gray-400 hover:text-emerald-400 transition" href="#examples">Examples</a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-12">
+
+                <section id="variables">
+                    <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Variables</h2>
+                    <p class="text-gray-400 mb-6">These variables represent properties of the recent change event. You
+                        can use them in your filter expressions.</p>
+
+                    <div class="bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
+                        <table class="min-w-full divide-y divide-slate-700">
+                            <thead class="bg-slate-700">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                        Variable
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                        Type
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                        Description
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700">
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">user</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Username or IP of the editor.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">title</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Title of the page.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">comment</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Edit summary/comment.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">wiki</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Database name of the wiki (e.g.,
+                                        'enwiki').
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">type</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Type of change ('edit', 'new', 'log',
+                                        etc.).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">namespace</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Integer</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Namespace ID of the page.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">bot</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">True if the edit was made by a bot.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">minor</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">True if marked as a minor edit.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">added_lines</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Content of lines added in this edit.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">removed_lines</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Content of lines removed in this edit.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">user_groups</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">List&lt;String&gt;</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">List of user groups (e.g., 'sysop',
+                                        'bot').
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">user_rights</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">List&lt;String&gt;</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">List of user rights.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">id</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Long</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Event ID.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">page_id</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Long</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">ID of the page.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">title_url</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">URL of the page title.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">parsedcomment</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Parsed edit summary (HTML).</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">timestamp</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Long</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Timestamp of the edit.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">patrolled</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">True if the edit was patrolled.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">notify_url</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">URL for notifications.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">server_url</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Base URL of the server.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">server_name</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Hostname of the server.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">server_script_path</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Path to the server script.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">flagged</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Boolean</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Internal flag (true if flagged by
+                                        filter).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">abuseType</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Internal abuse type classification.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">user_name</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">String</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Alias for 'user'.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">page_namespace</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Integer</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Alias for 'namespace'.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-emerald-400">old_size</td>
+                                    <td class="px-6 py-4 text-sm text-gray-400">Long</td>
+                                    <td class="px-6 py-4 text-sm text-gray-300">Size of the page before the edit.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="string-functions">
+                    <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">String Functions</h2>
+                    <div class="grid gap-6">
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">contains(text, value)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> contains
+                                <code>value</code> (case-sensitive).
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">contains(title,
                             'Java')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">containsIgnoreCase(text, value)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> contains
-                            <code>value</code> (case-insensitive).
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">containsIgnoreCase(comment,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">containsIgnoreCase(text, value)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> contains
+                                <code>value</code> (case-insensitive).
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">containsIgnoreCase(comment,
                             'vandalism')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">length(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns the length of the string.</p>
-                        <code
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">length(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns the length of the string.</p>
+                            <code
                                 class="block bg-slate-900 p-2 rounded text-xs text-gray-400">length(comment) > 50</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">normalizeArabic(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Normalizes Arabic text (removes diacritics, unifies
-                            alef forms, etc.).</p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">contains(normalizeArabic(title),
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">normalizeArabic(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Normalizes Arabic text (removes diacritics, unifies
+                                alef forms, etc.).</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">contains(normalizeArabic(title),
                             'محمد')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">startsWith(text, value)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> starts with
-                            <code>value</code>.
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">startsWith(title,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">startsWith(text, value)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> starts with
+                                <code>value</code>.
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">startsWith(title,
                             'User:')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">endsWith(text, value)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> ends with
-                            <code>value</code>.
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">endsWith(title,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">endsWith(text, value)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> ends with
+                                <code>value</code>.
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">endsWith(title,
                             '.js')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">equals(text, value)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> equals
-                            <code>value</code> (case-sensitive).
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">equals(user,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">equals(text, value)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> equals
+                                <code>value</code> (case-sensitive).
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">equals(user,
                             'Admin')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">equalsIgnoreCase(text, value)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> equals
-                            <code>value</code> (case-insensitive).
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">equalsIgnoreCase(user,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">equalsIgnoreCase(text, value)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> equals
+                                <code>value</code> (case-insensitive).
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">equalsIgnoreCase(user,
                             'admin')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">isEmpty(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> is null or empty.</p>
-                        <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">isEmpty(comment)</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">isBlank(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> is null, empty, or
-                            whitespace.</p>
-                        <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">isBlank(comment)</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">count(text, needle)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns the number of occurrences of
-                            <code>needle</code> in <code>text</code>.
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">count(added_lines, 'link')
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">isEmpty(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> is null or empty.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">isEmpty(comment)</code>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">isBlank(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Checks if <code>text</code> is null, empty, or
+                                whitespace.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">isBlank(comment)</code>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">count(text, needle)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns the number of occurrences of
+                                <code>needle</code> in <code>text</code>.
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">count(added_lines, 'link')
                             > 5</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">lower(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Converts <code>text</code> to lowercase.</p>
-                        <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">lower(title)</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">upper(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Converts <code>text</code> to uppercase.</p>
-                        <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">upper(title)</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">trim(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Removes leading and trailing whitespace from
-                            <code>text</code>.
-                        </p>
-                        <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">trim(comment)</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">removeWhitespace(text)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Removes all whitespace from <code>text</code>.</p>
-                        <code
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">lower(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Converts <code>text</code> to lowercase.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">lower(title)</code>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">upper(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Converts <code>text</code> to uppercase.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">upper(title)</code>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">trim(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Removes leading and trailing whitespace from
+                                <code>text</code>.
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">trim(comment)</code>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">removeWhitespace(text)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Removes all whitespace from <code>text</code>.</p>
+                            <code
                                 class="block bg-slate-900 p-2 rounded text-xs text-gray-400">removeWhitespace(title)</code>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section id="regex-functions">
-                <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Regex Functions</h2>
-                <div class="grid gap-6">
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">matches(text, regex)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns true if <code>text</code> matches the regular
-                            expression.</p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">matches(title,
+                <section id="regex-functions">
+                    <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Regex Functions</h2>
+                    <div class="grid gap-6">
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">matches(text, regex)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns true if <code>text</code> matches the regular
+                                expression.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">matches(title,
                             '^User:.*')</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">rcount(text, regex)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns the number of matches of the regex in the
-                            text.</p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">rcount(added_lines,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">rcount(text, regex)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns the number of matches of the regex in the
+                                text.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">rcount(added_lines,
                             'https?://') > 5</code>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section id="list-functions">
-                <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">List Functions</h2>
-                <div class="grid gap-6">
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">in(value, list)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns true if <code>value</code> is present in the
-                            <code>list</code>.
-                        </p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">in('sysop',
+                <section id="list-functions">
+                    <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">List Functions</h2>
+                    <div class="grid gap-6">
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">in(value, list)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns true if <code>value</code> is present in the
+                                <code>list</code>.
+                            </p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">in('sysop',
                             user_groups)</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">anyContains(text, list)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns true if <code>text</code> contains any string
-                            from <code>list</code>.</p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">anyContains(comment,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">anyContains(text, list)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns true if <code>text</code> contains any string
+                                from <code>list</code>.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">anyContains(comment,
                             {'bad', 'word'})</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">allContains(text, list)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns true if <code>text</code> contains all strings
-                            from <code>list</code>.</p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">allContains(comment,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">allContains(text, list)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns true if <code>text</code> contains all strings
+                                from <code>list</code>.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">allContains(comment,
                             {'required', 'terms'})</code>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section id="time-functions">
-                <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Time Functions</h2>
-                <div class="grid gap-6">
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">hour(time)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns the hour of the day (0-23).</p>
-                        <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">hour(now())</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">dayOfWeek(time)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns the day of the week.</p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">dayOfWeek(now()) ==
+                <section id="time-functions">
+                    <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Time Functions</h2>
+                    <div class="grid gap-6">
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">hour(time)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns the hour of the day (0-23).</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">hour(now())</code>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">dayOfWeek(time)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns the day of the week.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">dayOfWeek(now()) ==
                             'MONDAY'</code>
-                    </div>
-                    <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h4 class="text-lg font-bold text-emerald-400 mb-2">isNightTime(time, start, end)</h4>
-                        <p class="text-gray-300 text-sm mb-2">Returns true if the time is between start (inclusive)
-                            and end (exclusive) hours.</p>
-                        <code
-                                class="block bg-slate-900 p-2 rounded text-xs text-gray-400">isNightTime(now(), 22,
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-lg font-bold text-emerald-400 mb-2">isNightTime(time, start, end)</h4>
+                            <p class="text-gray-300 text-sm mb-2">Returns true if the time is between start (inclusive)
+                                and end (exclusive) hours.</p>
+                            <code class="block bg-slate-900 p-2 rounded text-xs text-gray-400">isNightTime(now(), 22,
                             6)</code>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section id="examples">
-                <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Examples</h2>
-                <div class="space-y-4">
-                    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                        <p class="text-gray-300 font-semibold mb-2">Detect potential vandalism (large removal of
-                            content):</p>
-                        <pre
+                <section id="examples">
+                    <h2 class="text-3xl font-bold text-white mb-6 pb-2 border-b border-slate-700">Examples</h2>
+                    <div class="space-y-4">
+                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                            <p class="text-gray-300 font-semibold mb-2">Detect potential vandalism (large removal of
+                                content):</p>
+                            <pre
                                 class="bg-slate-900 p-3 rounded text-emerald-400 font-mono text-sm overflow-x-auto">old_size > 1000 && (old_size - length(added_lines) + length(removed_lines)) > 500</pre>
-                    </div>
-                    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                        <p class="text-gray-300 font-semibold mb-2">Monitor specific user on specific wiki:</p>
-                        <pre
+                        </div>
+                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                            <p class="text-gray-300 font-semibold mb-2">Monitor specific user on specific wiki:</p>
+                            <pre
                                 class="bg-slate-900 p-3 rounded text-emerald-400 font-mono text-sm overflow-x-auto">wiki == 'enwiki' && user == 'TargetUser'</pre>
-                    </div>
-                    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                        <p class="text-gray-300 font-semibold mb-2">Filter for main namespace edits by anonymous
-                            users:</p>
-                        <pre
+                        </div>
+                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                            <p class="text-gray-300 font-semibold mb-2">Filter for main namespace edits by anonymous
+                                users:</p>
+                            <pre
                                 class="bg-slate-900 p-3 rounded text-emerald-400 font-mono text-sm overflow-x-auto">namespace == 0 && matches(user, '^\d+\.\d+\.\d+\.\d+$')</pre>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
+            </div>
         </div>
     </div>
-</div>
 
 </body>
 
