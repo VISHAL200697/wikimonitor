@@ -12,38 +12,39 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/js/**",
-                                "/css/**",
-                                "/login",
-                                "/oauth2/callback",
-                                "/auth/wikimedia",
-                                "/access-denied")
-                        .permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/").hasRole("USER")
-                        .anyRequest().hasRole("USER"))
-                .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"))
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/js/**",
+                                                                "/css/**",
+                                                                "/images/**",
+                                                                "/login",
+                                                                "/oauth2/callback",
+                                                                "/auth/wikimedia",
+                                                                "/access-denied")
+                                                .permitAll()
+                                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                                .requestMatchers("/").hasRole("USER")
+                                                .anyRequest().hasRole("USER"))
+                                .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"))
 
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
-                        .permitAll())
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .defaultSuccessUrl("/", true)
+                                                .permitAll())
 
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
-                        .permitAll())
+                                .logout(logout -> logout
+                                                .logoutUrl("/logout")
+                                                .logoutSuccessUrl("/login")
+                                                .invalidateHttpSession(true)
+                                                .deleteCookies("JSESSIONID")
+                                                .permitAll())
 
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**"));
+                                .csrf(csrf -> csrf
+                                                .ignoringRequestMatchers("/api/**"));
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

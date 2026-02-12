@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <title>Login - Wikimedia Monitor</title>
     <meta charset="utf-8">
@@ -16,6 +17,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .login-card {
             max-width: 400px;
             width: 100%;
@@ -25,8 +27,10 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             text-align: center;
         }
+
         .login-btn {
-            background-color: #3366cc; /* Wikimedia Blue */
+            background-color: #3366cc;
+            /* Wikimedia Blue */
             color: white;
             font-weight: 600;
             padding: 0.75rem 1.5rem;
@@ -38,6 +42,7 @@
             justify-content: center;
             gap: 0.5rem;
         }
+
         .login-btn:hover {
             background-color: #2a4b8d;
             transform: translateY(-1px);
@@ -45,38 +50,42 @@
             color: white;
             text-decoration: none;
         }
+
         .logo-icon {
             font-size: 3rem;
             color: #333;
             margin-bottom: 1rem;
         }
     </style>
+    <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
 </head>
+
 <body>
 
-<div class="login-card">
-    <div class="mb-4">
-        <i class="bi bi-activity logo-icon"></i>
-        <h2 class="fw-bold mb-1">WikiMonitor</h2>
-        <p class="text-muted">Real-time collaboration monitoring</p>
-    </div>
+    <div class="login-card">
+        <div class="mb-4">
+            <i class="bi bi-activity logo-icon"></i>
+            <h2 class="fw-bold mb-1">WikiMonitor</h2>
+            <p class="text-muted">Real-time collaboration monitoring</p>
+        </div>
 
-    <div class="alert alert-danger" role="alert" th:if="${param.error}">
-        Login failed. Please try again.
-    </div>
-    <div class="alert alert-success" role="alert" th:if="${param.logout}">
-        You have been logged out.
-    </div>
+        <div class="alert alert-danger" role="alert" th:if="${param.error}">
+            Login failed. Please try again.
+        </div>
+        <div class="alert alert-success" role="alert" th:if="${param.logout}">
+            You have been logged out.
+        </div>
 
-    <a class="btn login-btn" href="/auth/wikimedia">
-        <i class="bi bi-wikipedia"></i>
-        Login with Wikimedia
-    </a>
+        <a class="btn login-btn" href="/auth/wikimedia">
+            <i class="bi bi-wikipedia"></i>
+            Login with Wikimedia
+        </a>
 
-    <div class="mt-4 text-muted small">
-        By logging in, you agree to our terms of service.
+        <div class="mt-4 text-muted small">
+            By logging in, you agree to our terms of service.
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>
