@@ -11,17 +11,30 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+
 @WebMvcTest(WikiActionController.class)
-@Import(SecurityConfig.class)
+@Import({ SecurityConfig.class, WikiActionControllerTest.TestConfig.class })
 public class WikiActionControllerTest {
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        public ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -35,7 +48,6 @@ public class WikiActionControllerTest {
     // so Spring Boot should inject a real one.
 
     @Test
-    @WithMockUser
     public void testUndo() throws Exception {
         // Prepare session
         MockHttpSession session = new MockHttpSession();
@@ -58,7 +70,9 @@ public class WikiActionControllerTest {
                     .param("title", "Test Page")
                     .param("revision", "12345")
                     .param("summary", "Reverting vandalism")
-                    .session(session))
+                    .session(session)
+                    .with(csrf())
+                    .with(user("user").roles("USER")))
                     .andExpect(status().isOk());
 
             // Verify our mocks were called
@@ -67,7 +81,6 @@ public class WikiActionControllerTest {
     }
 
     @Test
-    @WithMockUser
     public void testRollback() throws Exception {
         // Prepare session
         MockHttpSession session = new MockHttpSession();
@@ -89,7 +102,9 @@ public class WikiActionControllerTest {
                     .param("serverName", "en.wikipedia.org")
                     .param("title", "Test Page")
                     .param("user", "BadUser")
-                    .session(session))
+                    .session(session)
+                    .with(csrf())
+                    .with(user("user").roles("USER")))
                     .andExpect(status().isOk());
 
             // Verify our mocks were called
