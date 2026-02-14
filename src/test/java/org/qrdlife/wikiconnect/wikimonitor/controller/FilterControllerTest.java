@@ -8,8 +8,8 @@ import org.qrdlife.wikiconnect.wikimonitor.service.AbuseFilterService;
 import org.qrdlife.wikiconnect.wikimonitor.service.UserService;
 import org.qrdlife.wikiconnect.wikimonitor.service.WikiStreamService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,16 +28,16 @@ public class FilterControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UserRepository userRepository;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
-    @MockBean
+    @MockitoBean
     private AbuseFilterService abuseFilterService;
 
-    @MockBean
+    @MockitoBean
     private WikiStreamService wikiStreamService;
 
     @Test
@@ -60,8 +60,8 @@ public class FilterControllerTest {
         when(userService.loadUserByUsername("testuser")).thenReturn(user);
 
         mockMvc.perform(post("/api/filter/code")
-                        .content("return false;")
-                        .contentType("text/plain")) // Assuming text/plain as per controller logic implicitly, but check if
+                .content("return false;")
+                .contentType("text/plain")) // Assuming text/plain as per controller logic implicitly, but check if
                 // controller consumes JSON or plain text. Controller uses @RequestBody
                 // String, so default might be JSON or plain text depending on negotiation
                 // or config. Usually for String it's safer to not set content type or set

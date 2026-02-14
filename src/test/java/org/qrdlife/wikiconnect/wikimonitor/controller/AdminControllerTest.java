@@ -5,8 +5,8 @@ import org.qrdlife.wikiconnect.wikimonitor.config.SecurityConfig;
 import org.qrdlife.wikiconnect.wikimonitor.model.User;
 import org.qrdlife.wikiconnect.wikimonitor.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -32,10 +32,10 @@ public class AdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
-    @MockBean
+    @MockitoBean
     private org.qrdlife.wikiconnect.wikimonitor.service.SettingsService settingsService;
 
     @Test
@@ -69,8 +69,8 @@ public class AdminControllerTest {
         when(userService.findAll()).thenReturn(List.of(user));
 
         mockMvc.perform(post("/admin/users/1/approve")
-                        .param("approved", "true")
-                        .with(csrf()))
+                .param("approved", "true")
+                .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin"));
 
@@ -85,8 +85,8 @@ public class AdminControllerTest {
         when(userService.findAll()).thenReturn(List.of(user));
 
         mockMvc.perform(post("/admin/users/1/role")
-                        .param("role", "ADMIN")
-                        .with(csrf()))
+                .param("role", "ADMIN")
+                .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin"));
 
@@ -97,8 +97,8 @@ public class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     public void testAutoApproveToggle() throws Exception {
         mockMvc.perform(post("/admin/settings/auto-approve")
-                        .param("enabled", "true")
-                        .with(csrf()))
+                .param("enabled", "true")
+                .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin"));
 

@@ -7,8 +7,8 @@ import org.qrdlife.wikiconnect.wikimonitor.config.SecurityConfig;
 import org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService;
 import org.qrdlife.wikiconnect.wikimonitor.service.OAuth2Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -26,7 +26,7 @@ public class WikiActionControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private OAuth2Service oauth2Service;
 
     // We use the real ObjectMapper provided by Spring Boot Test context
@@ -54,11 +54,11 @@ public class WikiActionControllerTest {
                 })) {
 
             mockMvc.perform(post("/api/action/undo")
-                            .param("serverName", "en.wikipedia.org")
-                            .param("title", "Test Page")
-                            .param("revision", "12345")
-                            .param("summary", "Reverting vandalism")
-                            .session(session))
+                    .param("serverName", "en.wikipedia.org")
+                    .param("title", "Test Page")
+                    .param("revision", "12345")
+                    .param("summary", "Reverting vandalism")
+                    .session(session))
                     .andExpect(status().isOk());
 
             // Verify our mocks were called
@@ -86,10 +86,10 @@ public class WikiActionControllerTest {
                 })) {
 
             mockMvc.perform(post("/api/action/rollback")
-                            .param("serverName", "en.wikipedia.org")
-                            .param("title", "Test Page")
-                            .param("user", "BadUser")
-                            .session(session))
+                    .param("serverName", "en.wikipedia.org")
+                    .param("title", "Test Page")
+                    .param("user", "BadUser")
+                    .session(session))
                     .andExpect(status().isOk());
 
             // Verify our mocks were called
