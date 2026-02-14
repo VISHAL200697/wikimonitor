@@ -88,7 +88,7 @@ The application uses `src/main/resources/application.properties` for core settin
 
 ## Technologies Used
 
--   **Backend**: Java 17, Spring Boot 3.2.1
+-   **Backend**: Java 17, Spring Boot 4.0.2
 -   **Database**: SQLite
 -   **Streaming**: OkHttp (SSE)
 -   **Authentication**: ScribeJava (OAuth2)

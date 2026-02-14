@@ -7,8 +7,8 @@ import org.qrdlife.wikiconnect.wikimonitor.model.User;
 import org.qrdlife.wikiconnect.wikimonitor.service.OAuth2Service;
 import org.qrdlife.wikiconnect.wikimonitor.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,10 +25,10 @@ public class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
-    @MockBean
+    @MockitoBean
     private OAuth2Service oauth2Service;
 
     @Test
@@ -60,7 +60,7 @@ public class AuthControllerTest {
         when(userService.findOrCreateUser(anyLong(), anyString())).thenReturn(mockUser);
 
         mockMvc.perform(get("/oauth2/callback")
-                        .param("code", "auth-code"))
+                .param("code", "auth-code"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"));
 
@@ -73,7 +73,7 @@ public class AuthControllerTest {
         when(oauth2Service.getAccessToken(anyString())).thenThrow(new RuntimeException("OAuth failed"));
 
         mockMvc.perform(get("/oauth2/callback")
-                        .param("code", "auth-code"))
+                .param("code", "auth-code"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?error"));
     }
