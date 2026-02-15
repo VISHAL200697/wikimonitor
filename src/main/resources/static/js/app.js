@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let eventSource = null;
 
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
     // --- SSE Connection ---
     function connect() {
         if (eventSource) return;
@@ -263,7 +269,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         undoModal.hide();
 
-        fetch('/api/action/undo', { method: 'POST', body: params })
+        undoModal.hide();
+
+        const csrfToken = getCookie('XSRF-TOKEN');
+        const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+        if (csrfToken) {
+            headers['X-XSRF-TOKEN'] = csrfToken;
+        }
+
+        fetch('/api/action/undo', { method: 'POST', body: params, headers: headers })
             .then(res => {
                 if (res.ok) return res.json();
                 return res.json().then(json => { throw new Error(json.error || 'Unknown error'); });
@@ -289,7 +303,13 @@ document.addEventListener('DOMContentLoaded', () => {
             user: event.user
         });
 
-        fetch('/api/action/rollback', { method: 'POST', body: params })
+        const csrfToken = getCookie('XSRF-TOKEN');
+        const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+        if (csrfToken) {
+            headers['X-XSRF-TOKEN'] = csrfToken;
+        }
+
+        fetch('/api/action/rollback', { method: 'POST', body: params, headers: headers })
             .then(res => {
                 if (res.ok) return res.json();
                 return res.json().then(json => { throw new Error(json.error || 'Unknown error'); });
@@ -362,13 +382,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Controls ---
     pauseBtn.addEventListener('click', () => {
-        fetch('/api/pause', { method: 'POST' });
+        const csrfToken = getCookie('XSRF-TOKEN');
+        fetch('/api/pause', {
+            method: 'POST',
+            headers: csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}
+        });
         pauseBtn.style.display = 'none';
         resumeBtn.style.display = 'inline-block';
     });
 
     resumeBtn.addEventListener('click', () => {
-        fetch('/api/resume', { method: 'POST' });
+        const csrfToken = getCookie('XSRF-TOKEN');
+        fetch('/api/resume', {
+            method: 'POST',
+            headers: csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}
+        });
         resumeBtn.style.display = 'none';
         pauseBtn.style.display = 'inline-block';
     });
@@ -513,7 +541,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveFilterBtn.addEventListener('click', () => {
         const code = cmEditor ? cmEditor.getValue() : filterCode.value;
-        fetch('/api/filter/code', { method: 'POST', body: code })
+        const csrfToken = getCookie('XSRF-TOKEN');
+        fetch('/api/filter/code', {
+            method: 'POST',
+            body: code,
+            headers: csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}
+        })
             .then(res => {
                 if (res.ok) {
                     saveFilterBtn.textContent = 'Saved!';
