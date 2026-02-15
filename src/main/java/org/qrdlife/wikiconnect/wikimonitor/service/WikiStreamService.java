@@ -84,7 +84,7 @@ public class WikiStreamService {
 
             @Override
             public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type,
-                                @NotNull String data) {
+                    @NotNull String data) {
                 if (id != null) {
                     lastEventId = id;
                 }
@@ -105,7 +105,7 @@ public class WikiStreamService {
 
             @Override
             public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t,
-                                  @Nullable Response response) {
+                    @Nullable Response response) {
                 log.error("Stream failure: {}", t != null ? t.toString() : "Unknown");
                 scheduleReconnect();
             }
@@ -137,7 +137,7 @@ public class WikiStreamService {
                     ObjectNode node = mapper.valueToTree(rc);
                     node.put("flagged", true);
                     log.debug("Broadcasting match to {}", context.user.getUsername());
-                    emitter.send(node);
+                    emitter.send(mapper.writeValueAsString(node));
                 }
             } catch (Exception e) {
                 emitters.remove(emitter);
