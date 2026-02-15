@@ -1,0 +1,28 @@
+name: Trigger Toolforge Build Beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to build"
+        required: true
+        default: "main"
+
+jobs:
+  trigger-build:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Trigger Build on Toolforge
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            become wikimonitor-beta bash -c "
+              toolforge build start https://github.com/${{ github.repository }} --ref ${{ github.event.inputs.branch }};
+              toolforge webservice buildservice restart"
