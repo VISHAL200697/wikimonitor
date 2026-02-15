@@ -1,12 +1,12 @@
 package org.qrdlife.wikiconnect.wikimonitor.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class AccessDeniedController {
 
-    @GetMapping("/access-denied")
+    @RequestMapping("/access-denied")
     public String accessDenied() {
         return "access-denied";
     }
