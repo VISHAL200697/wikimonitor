@@ -40,11 +40,12 @@ public class AuthControllerTest {
 
     @Test
     public void testLoginWikimedia() throws Exception {
-        when(oauth2Service.getAuthorizationUrl()).thenReturn("https://meta.wikimedia.org/w/rest.php/oauth2/authorize");
+        when(oauth2Service.getAuthorizationUrl(anyString()))
+                .thenReturn("https://meta.wikimedia.org/w/rest.php/oauth2/authorize?state=test-state");
 
         mockMvc.perform(get("/auth/wikimedia"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("https://meta.wikimedia.org/w/rest.php/oauth2/authorize"));
+                .andExpect(redirectedUrl("https://meta.wikimedia.org/w/rest.php/oauth2/authorize?state=test-state"));
     }
 
     @Test
@@ -60,7 +61,9 @@ public class AuthControllerTest {
         when(userService.findOrCreateUser(anyLong(), anyString())).thenReturn(mockUser);
 
         mockMvc.perform(get("/oauth2/callback")
-                .param("code", "auth-code"))
+                .param("code", "auth-code")
+                .param("state", "valid-state")
+                .sessionAttr("OAUTH_STATE", "valid-state"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"));
 
@@ -73,8 +76,29 @@ public class AuthControllerTest {
         when(oauth2Service.getAccessToken(anyString())).thenThrow(new RuntimeException("OAuth failed"));
 
         mockMvc.perform(get("/oauth2/callback")
-                .param("code", "auth-code"))
+                .param("code", "auth-code")
+                .param("state", "valid-state")
+                .sessionAttr("OAUTH_STATE", "valid-state"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?error"));
+    }
+
+    @Test
+    public void testOauthCallbackInvalidState() throws Exception {
+        mockMvc.perform(get("/oauth2/callback")
+                .param("code", "auth-code")
+                .param("state", "invalid-state")
+                .sessionAttr("OAUTH_STATE", "valid-state"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error=invalid_state"));
+    }
+
+    @Test
+    public void testOauthCallbackMissingSessionState() throws Exception {
+        mockMvc.perform(get("/oauth2/callback")
+                .param("code", "auth-code")
+                .param("state", "some-state"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error=invalid_state"));
     }
 }
