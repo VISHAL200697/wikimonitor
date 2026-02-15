@@ -60,6 +60,18 @@ class OAuth2ServiceTest {
     }
 
     @Test
+    void getAuthorizationUrl_WithState_Success() {
+        String url = "http://auth.url?state=test";
+        String state = "test";
+        when(oauth20Service.getAuthorizationUrl(state)).thenReturn(url);
+
+        String result = oauth2Service.getAuthorizationUrl(state);
+
+        assertEquals(url, result);
+        verify(oauth20Service).getAuthorizationUrl(state);
+    }
+
+    @Test
     void getAccessToken_Success() throws Exception {
         OAuth2AccessToken token = new OAuth2AccessToken("access_token");
         when(oauth20Service.getAccessToken("code")).thenReturn(token);

@@ -29,6 +29,10 @@ public class OAuth2Service {
         return service.getAuthorizationUrl();
     }
 
+    public String getAuthorizationUrl(String state) {
+        return service.getAuthorizationUrl(state);
+    }
+
     public com.github.scribejava.core.model.OAuth2AccessToken getAccessToken(String code) throws Exception {
         return service.getAccessToken(code);
     }
