@@ -40,6 +40,8 @@ public class SecurityConfig {
                                                                                                                 .getMessage()
                                                                                                 + "\"}");
                                                         } else {
+                                                                response.setStatus(
+                                                                                jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
                                                                 request.getRequestDispatcher("/access-denied").forward(
                                                                                 request,
                                                                                 response);
