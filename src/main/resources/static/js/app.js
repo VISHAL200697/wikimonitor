@@ -28,6 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
+    function escapeHtml(text) {
+        if (!text) return text;
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     // --- SSE Connection ---
     function connect() {
         if (eventSource) return;
@@ -74,12 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="badge bg-secondary" style="font-size: 0.7em;">${event.wiki}</span>
                 <small class="text-muted" style="font-size: 0.75em;">${time}</small>
             </div>
-            <div class="card-title text-dark">${event.title}</div>
+            <div class="card-title text-dark">${escapeHtml(event.title)}</div>
             <div class="card-meta mt-1">
                 <span class="${diffClass}">${diffStr}</span>
-                <span class="text-truncate ms-2" style="max-width: 150px;">${event.user}</span>
+                <span class="text-truncate ms-2" style="max-width: 150px;">${escapeHtml(event.user)}</span>
             </div>
-            <div class="small text-muted mt-1 text-truncate">${event.comment || ''}</div>
+            <div class="small text-muted mt-1 text-truncate">${escapeHtml(event.comment || '')}</div>
         `;
 
         // Actions Footer
@@ -222,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toastEl.innerHTML = `
             <div class="d-flex">
                 <div class="toast-body">
-                    ${message}
+                    ${escapeHtml(message)}
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
