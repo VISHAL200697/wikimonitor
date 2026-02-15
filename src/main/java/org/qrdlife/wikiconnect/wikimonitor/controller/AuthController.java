@@ -22,14 +22,25 @@ public class AuthController {
     }
 
     @GetMapping("/auth/wikimedia")
-    public String loginWikimedia() {
+    public String loginWikimedia(jakarta.servlet.http.HttpServletRequest request) {
         log.info("Redirecting to Wikimedia OAuth");
-        return "redirect:" + oauth2Service.getAuthorizationUrl();
+        String state = java.util.UUID.randomUUID().toString();
+        request.getSession().setAttribute("OAUTH_STATE", state);
+        return "redirect:" + oauth2Service.getAuthorizationUrl(state);
     }
 
     @GetMapping("/oauth2/callback")
-    public String oauthCallback(@RequestParam String code, jakarta.servlet.http.HttpServletRequest request) {
+    public String oauthCallback(@RequestParam String code, @RequestParam String state,
+            jakarta.servlet.http.HttpServletRequest request) {
         log.info("OAuth callback received with code length: {}", code.length());
+
+        String sessionState = (String) request.getSession().getAttribute("OAUTH_STATE");
+        if (sessionState == null || !sessionState.equals(state)) {
+            log.error("OAuth state mismatch! Expected: {}, Received: {}", sessionState, state);
+            return "redirect:/login?error=invalid_state";
+        }
+        request.getSession().removeAttribute("OAUTH_STATE");
+
         try {
             var token = oauth2Service.getAccessToken(code);
             var user = oauth2Service.getUserInfo(token);
