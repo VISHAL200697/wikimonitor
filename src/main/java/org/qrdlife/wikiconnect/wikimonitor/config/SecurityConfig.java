@@ -28,7 +28,23 @@ public class SecurityConfig {
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                                 .requestMatchers("/").hasRole("USER")
                                                 .anyRequest().hasRole("USER"))
-                                .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"))
+                                .exceptionHandling(ex -> ex
+                                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                        if (request.getRequestURI().startsWith("/api/")) {
+                                                                response.setStatus(
+                                                                                jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                                                                response.setContentType("application/json");
+                                                                response.getWriter().write(
+                                                                                "{\"error\": \"Forbidden\", \"message\": \""
+                                                                                                + accessDeniedException
+                                                                                                                .getMessage()
+                                                                                                + "\"}");
+                                                        } else {
+                                                                request.getRequestDispatcher("/access-denied").forward(
+                                                                                request,
+                                                                                response);
+                                                        }
+                                                }))
 
                                 .formLogin(form -> form
                                                 .loginPage("/login")
@@ -45,8 +61,29 @@ public class SecurityConfig {
                                 .csrf(csrf -> csrf
                                                 .csrfTokenRepository(
                                                                 org.springframework.security.web.csrf.CookieCsrfTokenRepository
-                                                                                .withHttpOnlyFalse()));
+                                                                                .withHttpOnlyFalse())
+                                                .csrfTokenRequestHandler(
+                                                                new org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler()))
+                                .addFilterAfter(new CsrfCookieFilter(),
+                                                org.springframework.security.web.authentication.www.BasicAuthenticationFilter.class);
 
                 return http.build();
+        }
+
+        private static class CsrfCookieFilter extends org.springframework.web.filter.OncePerRequestFilter {
+
+                @Override
+                protected void doFilterInternal(jakarta.servlet.http.HttpServletRequest request,
+                                jakarta.servlet.http.HttpServletResponse response,
+                                jakarta.servlet.FilterChain filterChain)
+                                throws jakarta.servlet.ServletException, java.io.IOException {
+                        org.springframework.security.web.csrf.CsrfToken csrfToken = (org.springframework.security.web.csrf.CsrfToken) request
+                                        .getAttribute(org.springframework.security.web.csrf.CsrfToken.class.getName());
+                        // Render the token value to a cookie by causing the deferred token to be loaded
+                        if (csrfToken != null) {
+                                csrfToken.getToken();
+                        }
+                        filterChain.doFilter(request, response);
+                }
         }
 }
