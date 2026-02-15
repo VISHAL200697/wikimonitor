@@ -39,6 +39,22 @@ public class AbuseFilterService {
     private final ExpressionParser parser = new SpelExpressionParser();
     private final java.util.Map<Long, List<org.springframework.expression.Expression>> expressionCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+    private static final java.util.Set<String> ALLOWED_METHODS = java.util.Set.of(
+            "test",
+            "getId", "getType", "getNamespace", "getTitle", "getPageId", "getTitleUrl",
+            "getUser", "getComment", "getParsedcomment", "getTimestamp", "getWiki",
+            "isBot", "isMinor", "isPatrolled",
+            "getNotifyUrl", "getServerUrl", "getServerName", "getServerScriptPath",
+            "getServer_name", "getServer_url", "getServer_script_path",
+            "getTitle_url", "getNotify_url", "getAdded_lines", "getRemoved_lines",
+            "getUser_name", "getPage_namespace", "getOld_size", "getUser_rights", "getUser_groups",
+            "contains", "containsIgnoreCase", "startsWith", "endsWith", "equals", "equalsIgnoreCase",
+            "length", "isEmpty", "isBlank",
+            "matches", "regexCount", "rcount", "count",
+            "lower", "upper", "trim", "removeWhitespace", "normalizeArabic",
+            "in", "anyContains", "allContains",
+            "hour", "dayOfWeek", "isNightTime");
+
     /**
      * Checks if a RecentChange event matches the user's filter rules.
      *
@@ -126,6 +142,10 @@ public class AbuseFilterService {
                 .withRootObject(root)
                 .withMethodResolvers((ctx, target, name, args) -> {
                     if (target instanceof org.qrdlife.wikiconnect.wikimonitor.FilterFunctions) {
+                        if (!ALLOWED_METHODS.contains(name)) {
+                            // Method not in allowlist -> forbidden
+                            return null;
+                        }
                         return new org.springframework.expression.spel.support.ReflectiveMethodResolver()
                                 .resolve(ctx, target, name, args);
                     }

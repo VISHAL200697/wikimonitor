@@ -168,4 +168,19 @@ class AbuseFilterServiceTest {
                         "user == 'WikiUser'");
         assertTrue(abuseFilterService.matches(rc, user), "Should handle mixed OR/AND logic properly");
     }
+
+    @Test
+    void testMatches_SecurityRestriction() {
+        // Attempt to call a method not in the allowlist, e.g., getClass()
+        // getClass() is a method of Object, not explicitly in FilterFunctions allowlist
+        user.setFilterCode("getClass().getName() == 'org.qrdlife.wikiconnect.wikimonitor.FilterFunctions'");
+
+        // Should evaluate to false because getClass() is restricted
+        assertFalse(abuseFilterService.matches(rc, user), "Should block access to restricted methods like getClass()");
+
+        // Verify allowed method works
+        abuseFilterService.refreshRules(user);
+        user.setFilterCode("getTitle() == 'Test Page'");
+        assertTrue(abuseFilterService.matches(rc, user), "Should allow access to allowed methods like getTitle()");
+    }
 }
