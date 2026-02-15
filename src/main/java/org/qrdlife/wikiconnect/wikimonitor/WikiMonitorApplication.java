@@ -28,8 +28,10 @@ public class WikiMonitorApplication {
     @jakarta.annotation.PostConstruct
     public void init() {
         version = appVersion;
-        userAgent = "WikiMonitor/" + version + " (https://phabricator.wikimedia.org/project/profile/8514/)";
+        userAgent = "WikiMonitor/" + version
+                + " (https://phabricator.wikimedia.org/project/profile/8514/; gergesshamon@toolforge.org)";
     }
+
     private static final Map<String, ActionApi> actionApis = new ConcurrentHashMap<>();
     private static Dotenv dotenv;
     private static ConfigurableApplicationContext context;
