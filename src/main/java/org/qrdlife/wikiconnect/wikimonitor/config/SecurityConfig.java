@@ -61,6 +61,11 @@ public class SecurityConfig {
                                                 .deleteCookies("JSESSIONID")
                                                 .permitAll())
 
+                                .headers(headers -> headers
+                                                .contentSecurityPolicy(csp -> csp
+                                                                .policyDirectives(
+                                                                                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://www.mediawiki.org; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';")))
+
                                 .csrf(csrf -> csrf
                                                 .csrfTokenRepository(
                                                                 org.springframework.security.web.csrf.CookieCsrfTokenRepository
