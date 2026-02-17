@@ -11,14 +11,7 @@
     <script th:inline="javascript">
         const isLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
     </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css"
-        rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="/lib/codemirror/cm6.bundle.js"></script>
     <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
 </head>
 
