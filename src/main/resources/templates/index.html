@@ -5,8 +5,8 @@
     <title>Wikimedia Monitor</title>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
-    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" rel="stylesheet">
+    <link crossorigin="anonymous" href="/lib/bootstrap-5.3.2/css/bootstrap.min.css"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
     <script th:inline="javascript">
@@ -14,7 +14,7 @@
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css"
-          rel="stylesheet">
+        rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
@@ -25,129 +25,128 @@
 
 <body>
 
-<div class="app-layout">
+    <div class="app-layout">
 
-    <!-- Main Area: Diff Viewer (Left) -->
-    <div class="diff-viewer" id="mainView">
-        <header class="diff-header d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+        <!-- Main Area: Diff Viewer (Left) -->
+        <div class="diff-viewer" id="mainView">
+            <header class="diff-header d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
 
 
-            <!-- Current Page Info -->
-            <div class="page-info text-truncate">
-                <span class="badge bg-secondary me-2" id="currentWiki">Wiki</span>
-                <span class="fw-bold" id="currentTitle">No Article Selected</span>
-            </div>
+                <!-- Current Page Info -->
+                <div class="page-info text-truncate">
+                    <span class="badge bg-secondary me-2" id="currentWiki">Wiki</span>
+                    <span class="fw-bold" id="currentTitle">No Article Selected</span>
+                </div>
 
-            <!-- Diff Actions (Dynamic) -->
-            <div class="d-flex gap-2 ms-3 me-auto" id="diffActions"></div>
+                <!-- Diff Actions (Dynamic) -->
+                <div class="d-flex gap-2 ms-3 me-auto" id="diffActions"></div>
 
-            <!-- Global Controls (Toolbar) -->
-            <div class="global-controls d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary d-md-none" id="mobileMenuBtn">
-                    <i class="bi bi-list"></i>
-                </button>
-                <button class="btn btn-danger btn-sm" id="pauseBtn" title="Pause Stream">
-                    <i class="bi bi-pause-fill"></i>
-                </button>
-                <button class="btn btn-success btn-sm" id="resumeBtn" style="display: none;" title="Resume Stream">
-                    <i class="bi bi-play-fill"></i>
-                </button>
-                <button class="btn btn-outline-primary btn-sm" id="filterBtn" title="Settings / Filters">
-                    <i class="bi bi-gear-fill"></i>
-                </button>
-                <a class="btn btn-outline-info btn-sm" href="/wiki" title="Documentation">
-                    <i class="bi bi-book-fill"></i>
-                </a>
-                <a class="btn btn-outline-warning btn-sm" href="/admin" sec:authorize="hasRole('ADMIN')"
-                   title="Admin Dashboard">
-                    <i class="bi bi-shield-lock-fill"></i>
-                </a>
-                <form action="/logout" class="d-inline" method="post">
-                    <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden"/>
-                    <button class="btn btn-outline-secondary btn-sm" title="Logout" type="submit">
-                        <i class="bi bi-box-arrow-right"></i>
+                <!-- Global Controls (Toolbar) -->
+                <div class="global-controls d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary d-md-none" id="mobileMenuBtn">
+                        <i class="bi bi-list"></i>
                     </button>
-                </form>
-            </div>
-        </header>
+                    <button class="btn btn-danger btn-sm" id="pauseBtn" title="Pause Stream">
+                        <i class="bi bi-pause-fill"></i>
+                    </button>
+                    <button class="btn btn-success btn-sm" id="resumeBtn" style="display: none;" title="Resume Stream">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" id="filterBtn" title="Settings / Filters">
+                        <i class="bi bi-gear-fill"></i>
+                    </button>
+                    <a class="btn btn-outline-info btn-sm" href="/wiki" title="Documentation">
+                        <i class="bi bi-book-fill"></i>
+                    </a>
+                    <a class="btn btn-outline-warning btn-sm" href="/admin" sec:authorize="hasRole('ADMIN')"
+                        title="Admin Dashboard">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </a>
+                    <form action="/logout" class="d-inline" method="post">
+                        <input th:name="${_csrf.parameterName}" th:value="${_csrf.token}" type="hidden" />
+                        <button class="btn btn-outline-secondary btn-sm" title="Logout" type="submit">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </header>
 
-        <!-- Iframe Container -->
-        <div class="diff-content flex-grow-1 position-relative bg-light">
-            <div class="d-flex align-items-center justify-content-center h-100 text-muted" id="welcomeMessage">
-                <div class="text-center">
-                    <i class="bi bi-activity display-1"></i>
-                    <p class="mt-3">Waiting for events...</p>
+            <!-- Iframe Container -->
+            <div class="diff-content flex-grow-1 position-relative bg-light">
+                <div class="d-flex align-items-center justify-content-center h-100 text-muted" id="welcomeMessage">
+                    <div class="text-center">
+                        <i class="bi bi-activity display-1"></i>
+                        <p class="mt-3">Waiting for events...</p>
+                    </div>
+                </div>
+                <iframe class="w-100 h-100 border-0 d-none" id="diffFrame" name="diffFrame"></iframe>
+            </div>
+        </div>
+
+        <!-- Sidebar: Event Queue (Right) -->
+        <div class="event-queue flex-column" id="sidebarView">
+            <div class="queue-header px-3 py-2 border-bottom bg-light">
+                <small class="fw-bold text-muted text-uppercase">Recent Changes</small>
+            </div>
+            <div class="queue-list flex-grow-1 overflow-auto" id="eventList">
+                <!-- Event Cards Injected Here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Filter Modal (Kept same) -->
+    <div class="modal fade" id="filterModal" role="dialog" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Custom Filters</h5>
+                    <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small" for="filterCode">Enter one SpEL condition per
+                            line.</label>
+                        <textarea class="form-control font-monospace" id="filterCode"
+                            placeholder="wiki == 'enwiki'&#10;type == 'edit'" rows="10"></textarea>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-primary" id="saveFilterBtn" type="button">Save Script</button>
+                    </div>
                 </div>
             </div>
-            <iframe class="w-100 h-100 border-0 d-none" id="diffFrame" name="diffFrame"></iframe>
         </div>
     </div>
 
-    <!-- Sidebar: Event Queue (Right) -->
-    <div class="event-queue flex-column" id="sidebarView">
-        <div class="queue-header px-3 py-2 border-bottom bg-light">
-            <small class="fw-bold text-muted text-uppercase">Recent Changes</small>
-        </div>
-        <div class="queue-list flex-grow-1 overflow-auto" id="eventList">
-            <!-- Event Cards Injected Here -->
-        </div>
-    </div>
-
-</div>
-
-<!-- Filter Modal (Kept same) -->
-<div class="modal fade" id="filterModal" role="dialog" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Custom Filters</h5>
-                <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label text-muted small" for="filterCode">Enter one SpEL condition per
-                        line.</label>
-                    <textarea class="form-control font-monospace" id="filterCode" placeholder="wiki == 'enwiki'&#10;type == 'edit'"
-                              rows="10"></textarea>
+    <!-- Undo Modal -->
+    <div aria-hidden="true" aria-labelledby="undoModalLabel" class="modal fade" id="undoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="undoModalLabel">Undo Revision</h5>
+                    <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
                 </div>
-                <div class="text-end">
-                    <button class="btn btn-primary" id="saveFilterBtn" type="button">Save Script</button>
+                <div class="modal-body">
+                    <p>Are you sure you want to undo the edit on <strong id="undoPageTitle"></strong>?</p>
+                    <div class="mb-3">
+                        <label class="form-label" for="undoSummary">Summary (optional)</label>
+                        <input class="form-control" id="undoSummary" placeholder="Undo revision via WikiMonitor"
+                            type="text">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+                    <button class="btn btn-warning" id="confirmUndoBtn" type="button">Confirm Undo</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- Undo Modal -->
-<div aria-hidden="true" aria-labelledby="undoModalLabel" class="modal fade" id="undoModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="undoModalLabel">Undo Revision</h5>
-                <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to undo the edit on <strong id="undoPageTitle"></strong>?</p>
-                <div class="mb-3">
-                    <label class="form-label" for="undoSummary">Summary (optional)</label>
-                    <input class="form-control" id="undoSummary" placeholder="Undo revision via WikiMonitor"
-                           type="text">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
-                <button class="btn btn-warning" id="confirmUndoBtn" type="button">Confirm Undo</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Toast Container -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
-
-<script crossorigin="anonymous"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    <script crossorigin="anonymous" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/app.js"></script>
+    <script src="/js/app.js"></script>
 </body>
 
 </html>
