@@ -204,8 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(html => {
                 const head = `
                     <head>
-                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-                         <link rel="stylesheet" href="https://www.mediawiki.org/w/load.php?modules=mediawiki.legacy.shared|mediawiki.diff.styles&only=styles">
+                        <link rel="stylesheet" href="https://www.mediawiki.org/w/load.php?modules=mediawiki.legacy.shared|mediawiki.diff.styles&only=styles">
                         <style>
                             body { background: #fff; padding: 10px; font-size: 0.9rem; }
                             table.diff { width: 100%; }
