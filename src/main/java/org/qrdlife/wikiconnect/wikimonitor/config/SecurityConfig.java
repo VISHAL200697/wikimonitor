@@ -20,6 +20,7 @@ public class SecurityConfig {
                                                                 "/js/**",
                                                                 "/css/**",
                                                                 "/images/**",
+                                                                "/lib/**",
                                                                 "/login",
                                                                 "/oauth2/callback",
                                                                 "/auth/wikimedia",

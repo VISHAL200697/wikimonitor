@@ -204,8 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(html => {
                 const head = `
                     <head>
-                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-                         <link rel="stylesheet" href="https://www.mediawiki.org/w/load.php?modules=mediawiki.legacy.shared|mediawiki.diff.styles&only=styles">
+                        <link rel="stylesheet" href="https://www.mediawiki.org/w/load.php?modules=mediawiki.legacy.shared|mediawiki.diff.styles&only=styles">
                         <style>
                             body { background: #fff; padding: 10px; font-size: 0.9rem; }
                             table.diff { width: 100%; }
@@ -432,84 +431,92 @@ document.addEventListener('DOMContentLoaded', () => {
     let cmEditor = null;
 
     if (document.getElementById('filterCode')) {
-        cmEditor = CodeMirror.fromTextArea(document.getElementById('filterCode'), {
-            mode: 'javascript', // SpEL is similar enough
-            lineNumbers: true,
-            lint: {
-                getAnnotations: validateSpEL,
-                async: false
-            },
-            extraKeys: {
-                "Ctrl-Space": "autocomplete"
-            },
-            hintOptions: {
-                completeSingle: false,
-                hint: spelHint
-            }
-        });
+        const textArea = document.getElementById('filterCode');
+        textArea.style.display = 'none'; // Hide original textarea
 
-        cmEditor.on('inputRead', (cm, change) => {
-            if (change.text[0].match(/[a-zA-Z]/)) {
-                cm.showHint();
-            }
+        cmEditor = new CM.EditorView({
+            doc: textArea.value,
+            extensions: [
+                CM.basicSetup,
+                CM.javascript(),
+                CM.linter(validateSpEL),
+                CM.autocompletion({ override: [spelHint] }),
+                CM.keymap.of([CM.completionKeymap]),
+                CM.EditorView.updateListener.of(update => {
+                    if (update.docChanged) {
+                        textArea.value = update.state.doc.toString();
+                    }
+                }),
+                CM.placeholder("wiki == 'enwiki'\ntype == 'edit'")
+            ],
+            parent: textArea.parentNode
         });
     }
 
-    function spelHint(cm) {
-        const cur = cm.getCursor();
-        const token = cm.getTokenAt(cur);
-        const start = token.start;
-        const end = cur.ch;
-        const word = token.string.slice(0, end - start);
+    function spelHint(context) {
+        let word = context.matchBefore(/[\w_]*$/);
+        if (!word) return null;
+        if (word.from == word.to && !context.explicit) return null;
 
         const list = [];
+        const match = word.text;
 
         // Add properties
         knownProperties.forEach(p => {
-            if (p.startsWith(word)) list.push({ text: p, displayText: p + ' (var)' });
+            list.push({ label: p, type: "variable", boost: p.startsWith(match) ? 1 : 0 });
         });
 
         // Add functions
         knownFunctions.forEach(f => {
-            if (f.startsWith(word)) list.push({ text: f + '()', displayText: f + '()' });
+            list.push({ label: f + '()', type: "function", apply: f + '()', boost: f.startsWith(match) ? 1 : 0 });
         });
 
         // Add keywords
         keywords.forEach(k => {
-            if (k.startsWith(word)) list.push({ text: k, displayText: k });
+            list.push({ label: k, type: "keyword", boost: k.startsWith(match) ? 1 : 0 });
         });
 
         return {
-            list: list,
-            from: CodeMirror.Pos(cur.line, start),
-            to: CodeMirror.Pos(cur.line, end)
+            from: word.from,
+            options: list
         };
     }
 
-    function validateSpEL(text) {
+    function validateSpEL(view) {
+        const text = view.state.doc.toString();
         const found = [];
         if (!text) return found;
 
-        // Simple tokenizer/scanner to find unknown identifiers
-        // This is a naive implementation, a real parser would be better but complex in JS for SpEL
-
-        // We split by non-identifier chars roughly
-        // But we need to respect strings
-
         const lines = text.split('\n');
 
-        lines.forEach((line, i) => {
-            let currentLine = line;
+        lines.forEach((lineText, i) => {
+            // Get line start offset
+            const lineStart = view.state.doc.line(i + 1).from;
 
-            // Remove strings
-            currentLine = currentLine.replace(/'[^']*'/g, '""').replace(/"[^"]*"/g, '""');
+            let currentLine = lineText;
 
-            // Remove comments (basic # support)
+            // Remove strings (simple replacement to preserve length/positions approximately? 
+            // Actually replacing with "" changes length and messes up indices if we don't be careful.
+            // But replacing 'foo' with '""' changes length.
+            // Better to replace with spaces or same length placeholders?
+            // The original code was naive: .replace(/'[^']*'/g, '""').
+            // This DID change length, so the original `regex.exec(currentLine)` loop's `match.index` 
+            // would be wrong if strings were earlier in the line.
+            // The original code had a BUG there if strings were involved.
+            // Let's improve it slightly by replacing with spaces for validation purposes.
+
+            // Mask strings with spaces
+            currentLine = currentLine.replace(/'([^']*)'/g, (m) => " ".repeat(m.length));
+            currentLine = currentLine.replace(/"([^"]*)"/g, (m) => " ".repeat(m.length));
+
+            // Remove comments (to end of line)
             const commentIdx = currentLine.indexOf('#');
-            if (commentIdx !== -1) currentLine = currentLine.substring(0, commentIdx);
+            if (commentIdx !== -1) {
+                // Replaces comment with spaces
+                currentLine = currentLine.substring(0, commentIdx) + " ".repeat(currentLine.length - commentIdx);
+            }
 
             // Find identifiers
-            // Regex for valid java identifier start + parts
             const regex = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g;
             let match;
             while ((match = regex.exec(currentLine)) !== null) {
@@ -522,8 +529,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     !keywords.includes(word)) {
 
                     found.push({
-                        from: CodeMirror.Pos(i, col),
-                        to: CodeMirror.Pos(i, col + word.length),
+                        from: lineStart + col,
+                        to: lineStart + col + word.length,
                         message: "Unknown variable or function: " + word,
                         severity: "error"
                     });
@@ -541,8 +548,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.text())
             .then(code => {
                 if (cmEditor) {
-                    cmEditor.setValue(code || '');
-                    setTimeout(() => cmEditor.refresh(), 200); // Fix rendering issues in modal
+                    // CM6 dispatch to replace doc
+                    cmEditor.dispatch({
+                        changes: { from: 0, to: cmEditor.state.doc.length, insert: code || '' }
+                    });
                 } else {
                     filterCode.value = code;
                 }
@@ -550,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     saveFilterBtn.addEventListener('click', () => {
-        const code = cmEditor ? cmEditor.getValue() : filterCode.value;
+        const code = cmEditor ? cmEditor.state.doc.toString() : filterCode.value;
         const csrfToken = getCookie('XSRF-TOKEN');
         fetch('/api/filter/code', {
             method: 'POST',
