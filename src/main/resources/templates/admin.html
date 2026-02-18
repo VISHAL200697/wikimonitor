@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - WikiMonitor</title>
-    <link href="/lib/bootstrap-5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/lib/bootstrap-icons-1.13.1/css/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/css/style.css">
+    <link th:href="@{/lib/bootstrap-5.3.2/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/lib/bootstrap-icons-1.13.1/css/bootstrap-icons.min.css}" rel="stylesheet">
+    <link rel="icon" th:href="@{/images/icon.svg}" type="image/svg+xml">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
         body {
             background-color: var(--bg-color);
@@ -185,6 +185,17 @@
                                     </span>
                                 </td>
                                 <td class="text-end pe-4">
+                                    <form th:action="@{/admin/users/{id}/approve(id=${user.id})}" method="post"
+                                        class="d-inline-block me-2">
+                                        <input type="hidden" name="approved" th:value="${!user.approved}" />
+                                        <button type="submit" class="btn btn-sm rounded-pill px-3"
+                                            th:classappend="${user.approved ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                            th:title="${user.approved ? 'Revoke Access' : 'Approve Access'}">
+                                            <i class="bi"
+                                                th:classappend="${user.approved ? 'bi-x-circle' : 'bi-check-circle'}"></i>
+                                            <span th:text="${user.approved ? 'Revoke' : 'Approve'}">Approve</span>
+                                        </button>
+                                    </form>
                                     <form th:action="@{/admin/users/{id}/role(id=${user.id})}" method="post"
                                         class="d-inline-block" th:if="${user.role != 'ADMIN'}">
                                         <input type="hidden" name="role" value="ADMIN" />
@@ -236,7 +247,7 @@
         </div>
     </main>
 
-    <script src="/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js}"></script>
 </body>
 
 </html>

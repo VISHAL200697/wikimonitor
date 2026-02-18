@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login - WikiMonitor</title>
-    <link href="/lib/bootstrap-5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/lib/bootstrap-icons-1.13.1/css/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
+    <link th:href="@{/lib/bootstrap-5.3.2/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/lib/bootstrap-icons-1.13.1/css/bootstrap-icons.min.css}" rel="stylesheet">
+    <link rel="icon" th:href="@{/images/icon.svg}" type="image/svg+xml">
     <style>
         body {
             background-color: #f8f9fa;
@@ -46,7 +46,7 @@
     <div class="container d-flex justify-content-center">
         <div class="login-card p-4">
             <div class="login-header mb-3">
-                <img src="/images/icon.svg" alt="WikiMonitor Logo" width="64" height="64" class="mb-3">
+                <img th:src="@{/images/icon.svg}" alt="WikiMonitor Logo" width="128" height="128" class="mb-3">
                 <h3 class="fw-bold text-dark">WikiMonitor</h3>
                 <p class="text-secondary small">Real-time vandalism monitoring</p>
             </div>
@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <script src="/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js}"></script>
 
 </body>
 
