@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - WikiMonitor</title>
-    <link href="/lib/bootstrap-5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/lib/bootstrap-icons-1.13.1/css/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/css/style.css">
+    <link th:href="@{/lib/bootstrap-5.3.2/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/lib/bootstrap-icons-1.13.1/css/bootstrap-icons.min.css}" rel="stylesheet">
+    <link rel="icon" th:href="@{/images/icon.svg}" type="image/svg+xml">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
         body {
             background-color: var(--bg-color);
@@ -247,7 +247,7 @@
         </div>
     </main>
 
-    <script src="/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js}"></script>
 </body>
 
 </html>

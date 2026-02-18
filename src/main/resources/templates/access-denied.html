@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Access Denied - WikiMonitor</title>
-    <link href="/lib/bootstrap-5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" href="/images/icon.svg" type="image/svg+xml">
+    <link th:href="@{/lib/bootstrap-5.3.2/css/bootstrap.min.css}" rel="stylesheet">
+    <link rel="icon" th:href="@{/images/icon.svg}" type="image/svg+xml">
 </head>
 
 <body class="d-flex align-items-center justify-content-center vh-100 font-monospace">
@@ -23,7 +23,7 @@
             </form>
         </div>
     </div>
-    <script src="/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js}"></script>
 </body>
 
 </html>
