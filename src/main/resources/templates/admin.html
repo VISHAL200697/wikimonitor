@@ -185,6 +185,17 @@
                                     </span>
                                 </td>
                                 <td class="text-end pe-4">
+                                    <form th:action="@{/admin/users/{id}/approve(id=${user.id})}" method="post"
+                                        class="d-inline-block me-2">
+                                        <input type="hidden" name="approved" th:value="${!user.approved}" />
+                                        <button type="submit" class="btn btn-sm rounded-pill px-3"
+                                            th:classappend="${user.approved ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                            th:title="${user.approved ? 'Revoke Access' : 'Approve Access'}">
+                                            <i class="bi"
+                                                th:classappend="${user.approved ? 'bi-x-circle' : 'bi-check-circle'}"></i>
+                                            <span th:text="${user.approved ? 'Revoke' : 'Approve'}">Approve</span>
+                                        </button>
+                                    </form>
                                     <form th:action="@{/admin/users/{id}/role(id=${user.id})}" method="post"
                                         class="d-inline-block" th:if="${user.role != 'ADMIN'}">
                                         <input type="hidden" name="role" value="ADMIN" />
