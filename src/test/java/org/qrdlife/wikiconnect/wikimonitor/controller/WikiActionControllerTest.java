@@ -111,4 +111,47 @@ public class WikiActionControllerTest {
             verify(oauth2Service).getActionApi(eq("fake-token"), eq("https://en.wikipedia.org/w/api.php"));
         }
     }
+
+    @Test
+    public void testUndoWithInvalidServer() throws Exception {
+        // Prepare session
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("ACCESS_TOKEN", "fake-token");
+
+        mockMvc.perform(post("/api/action/undo")
+                .param("serverName", "invalid-domain.com")
+                .param("title", "Test Page")
+                .param("revision", "12345")
+                .param("summary", "Reverting vandalism")
+                .session(session)
+                .with(csrf())
+                .with(user("user").roles("USER")))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.error")
+                        .value("Invalid or disallowed serverName"));
+
+        // Verify that oauth2Service is not called
+        verifyNoInteractions(oauth2Service);
+    }
+
+    @Test
+    public void testRollbackWithInvalidServer() throws Exception {
+        // Prepare session
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("ACCESS_TOKEN", "fake-token");
+
+        mockMvc.perform(post("/api/action/rollback")
+                .param("serverName", "en.wikipedia.org/malicious")
+                .param("title", "Test Page")
+                .param("user", "BadUser")
+                .session(session)
+                .with(csrf())
+                .with(user("user").roles("USER")))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.error")
+                        .value("Invalid or disallowed serverName"));
+
+        // Verify that oauth2Service is not called
+        verifyNoInteractions(oauth2Service);
+    }
 }

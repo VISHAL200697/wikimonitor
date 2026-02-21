@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Controller for handling Wiki actions such as undo and rollback.
@@ -25,6 +27,46 @@ public class WikiActionController {
 
     private final OAuth2Service oauth2Service;
     private final ObjectMapper objectMapper;
+    private static final List<Pattern> ALLOWED_HOST_PATTERNS = List.of(
+            Pattern.compile("^([a-z0-9-]+\\.)?wikibooks\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikidata\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikimedia\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikinews\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikipedia\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikiquote\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikisource\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikiversity\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wikivoyage\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wiktionary\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wmcloud\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?wmflabs\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^wikimediafoundation\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?mediawiki\\.org$", Pattern.CASE_INSENSITIVE));
+
+    /**
+     * Validates whether a given server name belongs to an allowed Wikimedia domain.
+     * Prevents malicious inputs such as protocol injections, paths, or arbitrary
+     * domains.
+     *
+     * @param serverName The server domain to validate (e.g., "en.wikipedia.org").
+     * @return {@code true} if the server name is valid and allowed, {@code false}
+     *         otherwise.
+     */
+    private boolean isAllowedServer(String serverName) {
+        if (serverName == null || serverName.isBlank()) {
+            return false;
+        }
+
+        String host = serverName.toLowerCase().trim();
+
+        // Prevent protocol injection or paths
+        if (host.contains("/") || host.contains(":")) {
+            return false;
+        }
+
+        return ALLOWED_HOST_PATTERNS.stream()
+                .anyMatch(p -> p.matcher(host).matches());
+    }
 
     /**
      * Performs an undo action on a specific revision.
@@ -46,7 +88,11 @@ public class WikiActionController {
 
         log.info("Undo requested for title: {}, revision: {}, server: {}, summary: {}", title, revision, serverName,
                 summary);
-
+        if (!isAllowedServer(serverName)) {
+            log.warn("Invalid or disallowed serverName: {}", serverName);
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid or disallowed serverName"));
+        }
         String token = (String) session.getAttribute("ACCESS_TOKEN");
         if (token == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Not logged in"));
@@ -86,7 +132,11 @@ public class WikiActionController {
             HttpSession session) {
 
         log.info("Rollback requested for title: {}, user: {}, server: {}", title, user, serverName);
-
+        if (!isAllowedServer(serverName)) {
+            log.warn("Invalid or disallowed serverName: {}", serverName);
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid or disallowed serverName"));
+        }
         String token = (String) session.getAttribute("ACCESS_TOKEN");
         if (token == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Not logged in"));
