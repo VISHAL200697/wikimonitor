@@ -231,7 +231,7 @@ class MediaWikiServiceTest {
                             "merged": [
                                 {
                                     "wiki": "enwiki",
-                                    "groups": ["editor", "rollback"]
+                                    "groups": ["editor", "rollbacker"]
                                 },
                                 {
                                     "wiki": "frwiki",
