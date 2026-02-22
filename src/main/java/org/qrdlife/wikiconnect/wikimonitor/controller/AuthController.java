@@ -1,6 +1,9 @@
 package org.qrdlife.wikiconnect.wikimonitor.controller;
 
 import lombok.RequiredArgsConstructor;
+
+import org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication;
+import org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService;
 import org.qrdlife.wikiconnect.wikimonitor.service.OAuth2Service;
 import org.qrdlife.wikiconnect.wikimonitor.service.UserService;
 import org.springframework.stereotype.Controller;
@@ -42,8 +45,14 @@ public class AuthController {
         request.getSession().removeAttribute("OAUTH_STATE");
 
         try {
+            var apiMeta = WikiMonitorApplication.getApiMediaWiki("https://meta.wikimedia.org/w/api.php");
+            var mediaWikiService = new MediaWikiService(apiMeta);
             var token = oauth2Service.getAccessToken(code);
             var user = oauth2Service.getUserInfo(token);
+            if (!mediaWikiService.checkAnyRollbackRights(user.getUsername())) {
+                return "redirect:/login?error=no_rollback_rights";
+            }
+
             var userDetails = userService.findOrCreateUser(user.getCentralId(), user.getUsername());
 
             // Manually set security context
