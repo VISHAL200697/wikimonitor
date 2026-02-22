@@ -38,7 +38,6 @@ public class WikiActionController {
             Pattern.compile("^([a-z0-9-]+\\.)?wikiversity\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wikivoyage\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wiktionary\\.org$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^wikimediafoundation\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?mediawiki\\.org$", Pattern.CASE_INSENSITIVE));
 
     /**
