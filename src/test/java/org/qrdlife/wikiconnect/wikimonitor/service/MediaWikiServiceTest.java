@@ -203,4 +203,93 @@ class MediaWikiServiceTest {
                 map.get("user").equals("BadUser") &&
                 map.get("token").equals("fake_rollback_token")));
     }
+
+    @Test
+    void checkAnyRollbackRights_GlobalRollback() throws Exception {
+        String responseJson = """
+                {
+                    "query": {
+                        "globaluserinfo": {
+                            "rights": ["checkuser", "rollback", "steward"]
+                        }
+                    }
+                }
+                """;
+        when(requester.get(eq("query"), anyMap())).thenReturn(responseJson);
+
+        boolean result = mediaWikiService.checkAnyRollbackRights("User");
+        assertTrue(result);
+    }
+
+    @Test
+    void checkAnyRollbackRights_LocalRollback() throws Exception {
+        String responseJson = """
+                {
+                    "query": {
+                        "globaluserinfo": {
+                            "rights": ["checkuser"],
+                            "merged": [
+                                {
+                                    "wiki": "enwiki",
+                                    "groups": ["editor", "rollbacker"]
+                                },
+                                {
+                                    "wiki": "frwiki",
+                                    "groups": ["editor"]
+                                }
+                            ]
+                        }
+                    }
+                }
+                """;
+        when(requester.get(eq("query"), anyMap())).thenReturn(responseJson);
+
+        boolean result = mediaWikiService.checkAnyRollbackRights("User");
+        assertTrue(result);
+    }
+
+    @Test
+    void checkAnyRollbackRights_LocalSysop() throws Exception {
+        String responseJson = """
+                {
+                    "query": {
+                        "globaluserinfo": {
+                            "merged": [
+                                {
+                                    "wiki": "enwiki",
+                                    "groups": ["editor", "sysop"]
+                                }
+                            ]
+                        }
+                    }
+                }
+                """;
+        when(requester.get(eq("query"), anyMap())).thenReturn(responseJson);
+
+        boolean result = mediaWikiService.checkAnyRollbackRights("User");
+        assertTrue(result);
+    }
+
+    @Test
+    void checkAnyRollbackRights_NoRights() throws Exception {
+        String responseJson = """
+                {
+                    "query": {
+                        "globaluserinfo": {
+                            "rights": ["patroller"],
+                            "merged": [
+                                {
+                                    "wiki": "enwiki",
+                                    "groups": ["editor"]
+                                }
+                            ]
+                        }
+                    }
+                }
+                """;
+        when(requester.get(eq("query"), anyMap())).thenReturn(responseJson);
+
+        boolean result = mediaWikiService.checkAnyRollbackRights("User");
+        assertFalse(result);
+    }
 }
