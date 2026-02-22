@@ -60,27 +60,50 @@ public class AuthControllerTest {
         when(oauth2Service.getUserInfo(any())).thenReturn(mockUser);
         when(userService.findOrCreateUser(anyLong(), anyString())).thenReturn(mockUser);
 
-        mockMvc.perform(get("/oauth2/callback")
-                .param("code", "auth-code")
-                .param("state", "valid-state")
-                .sessionAttr("OAUTH_STATE", "valid-state"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+        try (org.mockito.MockedStatic<org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication> mockedWiki = org.mockito.Mockito
+                .mockStatic(org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.class);
+                org.mockito.MockedConstruction<org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService> mockedMwService = org.mockito.Mockito
+                        .mockConstruction(org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService.class,
+                                (mock, context) -> {
+                                    when(mock.checkAnyRollbackRights(anyString())).thenReturn(true);
+                                })) {
 
-        verify(oauth2Service).getAccessToken("auth-code");
-        verify(userService).findOrCreateUser(123L, "testuser");
+            mockedWiki
+                    .when(() -> org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.getApiMediaWiki(anyString()))
+                    .thenReturn(null);
+
+            mockMvc.perform(get("/oauth2/callback")
+                    .param("code", "auth-code")
+                    .param("state", "valid-state")
+                    .sessionAttr("OAUTH_STATE", "valid-state"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/"));
+
+            verify(oauth2Service).getAccessToken("auth-code");
+            verify(userService).findOrCreateUser(123L, "testuser");
+        }
     }
 
     @Test
     public void testOauthCallbackError() throws Exception {
         when(oauth2Service.getAccessToken(anyString())).thenThrow(new RuntimeException("OAuth failed"));
 
-        mockMvc.perform(get("/oauth2/callback")
-                .param("code", "auth-code")
-                .param("state", "valid-state")
-                .sessionAttr("OAUTH_STATE", "valid-state"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login?error"));
+        try (org.mockito.MockedStatic<org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication> mockedWiki = org.mockito.Mockito
+                .mockStatic(org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.class);
+                org.mockito.MockedConstruction<org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService> mockedMwService = org.mockito.Mockito
+                        .mockConstruction(org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService.class)) {
+
+            mockedWiki
+                    .when(() -> org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.getApiMediaWiki(anyString()))
+                    .thenReturn(null);
+
+            mockMvc.perform(get("/oauth2/callback")
+                    .param("code", "auth-code")
+                    .param("state", "valid-state")
+                    .sessionAttr("OAUTH_STATE", "valid-state"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/login?error=OAuth failed"));
+        }
     }
 
     @Test
