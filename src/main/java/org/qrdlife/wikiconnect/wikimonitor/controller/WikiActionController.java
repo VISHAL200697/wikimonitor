@@ -30,7 +30,6 @@ public class WikiActionController {
     private static final List<Pattern> ALLOWED_HOST_PATTERNS = List.of(
             Pattern.compile("^([a-z0-9-]+\\.)?wikibooks\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wikidata\\.org$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^([a-z0-9-]+\\.)?wikimedia\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wikinews\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wikipedia\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wikiquote\\.org$", Pattern.CASE_INSENSITIVE),
@@ -38,10 +37,13 @@ public class WikiActionController {
             Pattern.compile("^([a-z0-9-]+\\.)?wikiversity\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wikivoyage\\.org$", Pattern.CASE_INSENSITIVE),
             Pattern.compile("^([a-z0-9-]+\\.)?wiktionary\\.org$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^([a-z0-9-]+\\.)?wmcloud\\.org$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^([a-z0-9-]+\\.)?wmflabs\\.org$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^wikimediafoundation\\.org$", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("^([a-z0-9-]+\\.)?mediawiki\\.org$", Pattern.CASE_INSENSITIVE));
+            Pattern.compile("^([a-z0-9-]+\\.)?wikifunctions\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^([a-z0-9-]+\\.)?mediawiki\\.org$", Pattern.CASE_INSENSITIVE),
+            // Explicit wikimedia.org allowlist (no wildcard!)
+            Pattern.compile("^commons\\.wikimedia\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^meta\\.wikimedia\\.org$", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("^wikitech\\.wikimedia\\.org$", Pattern.CASE_INSENSITIVE)
+        );
 
     /**
      * Validates whether a given server name belongs to an allowed Wikimedia domain.
