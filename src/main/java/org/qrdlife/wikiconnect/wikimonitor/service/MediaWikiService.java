@@ -323,6 +323,54 @@ public class MediaWikiService {
         return response;
     }
 
+    public boolean checkAnyRollbackRights(String username) throws Exception {
+        log.info("Checking global and local rollback rights for user={}", username);
+
+        Map<String, Object> params = Map.of(
+                "meta", "globaluserinfo",
+                "guiuser", username,
+                "guiprop", "merged|rights",
+                "format", "json");
+
+        log.debug("Global user info params prepared");
+        String response = api.getRequester().get("query", params);
+        JSONObject json = new JSONObject(response);
+
+        JSONObject globalUserInfo = json.getJSONObject("query").getJSONObject("globaluserinfo");
+
+        JSONArray globalRightsArray = globalUserInfo.optJSONArray("rights");
+        if (globalRightsArray != null) {
+            for (int i = 0; i < globalRightsArray.length(); i++) {
+                if ("rollback".equals(globalRightsArray.getString(i))) {
+                    log.debug("User {} has global rollback rights", username);
+                    return true;
+                }
+            }
+        }
+
+        JSONArray mergedArray = globalUserInfo.optJSONArray("merged");
+        if (mergedArray != null) {
+            for (int i = 0; i < mergedArray.length(); i++) {
+                JSONObject siteInfo = mergedArray.getJSONObject(i);
+                JSONArray localGroups = siteInfo.optJSONArray("groups");
+
+                if (localGroups != null) {
+                    for (int j = 0; j < localGroups.length(); j++) {
+                        String group = localGroups.getString(j);
+                        if ("rollbacker".equals(group) || "sysop".equals(group)) {
+                            log.debug("User {} has local {} rights on dataset={}", username, group,
+                                    siteInfo.optString("wiki", "unknown"));
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        log.debug("User {} does not have any rollback rights", username);
+        return false;
+    }
+
     public record DiffContent(String lineAdded, String lineRemoved) {
     }
 }
