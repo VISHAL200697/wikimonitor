@@ -71,7 +71,7 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
 The application uses `src/main/resources/application.properties` for core settings:
 
 -   **Server Port**: `server.port=8000`
--   **Database**: SQLite (`wikimonitor.db`)
+-   **Database**: MySql
 -   **JPA/Hibernate**: Configured for SQLite dialect.
 
 ## Project Structure
