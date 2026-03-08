@@ -39,6 +39,8 @@ public class AbuseFilterService {
     private final ExpressionParser parser = new SpelExpressionParser();
     private final java.util.Map<Long, List<org.springframework.expression.Expression>> expressionCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+    private static final org.springframework.expression.spel.support.ReflectiveMethodResolver REFLECTIVE_METHOD_RESOLVER = new org.springframework.expression.spel.support.ReflectiveMethodResolver();
+
     private static final java.util.Set<String> ALLOWED_METHODS = java.util.Set.of(
             "test",
             "getId", "getType", "getNamespace", "getTitle", "getPageId", "getTitleUrl",
@@ -146,8 +148,7 @@ public class AbuseFilterService {
                             // Method not in allowlist -> forbidden
                             return null;
                         }
-                        return new org.springframework.expression.spel.support.ReflectiveMethodResolver()
-                                .resolve(ctx, target, name, args);
+                        return REFLECTIVE_METHOD_RESOLVER.resolve(ctx, target, name, args);
                     }
                     return null;
                 })
