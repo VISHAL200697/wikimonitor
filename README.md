@@ -55,10 +55,22 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
 2.  **Access the Dashboard:**
     Open your web browser and navigate to `http://localhost:8000`.
 
-3.  **Login:**
+3.  **Database Migrations (Flyway):**
+    This project uses [Flyway](https://flywaydb.org/) for database schema versioning. Migrations run automatically when the application starts.
+    -   **Create New Migrations:** Add `.sql` files to `src/main/resources/db/migration/` following the naming convention `V<Version>__<Description>.sql` (e.g., `V2__add_new_table.sql`).
+    -   **Run Migrations Manually:**
+        ```bash
+        mvn flyway:migrate
+        ```
+    -   **Repair Failed Migrations:** If a migration fails (e.g., due to a syntax error), fix the SQL file and run:
+        ```bash
+        mvn flyway:repair
+        ```
+
+4.  **Login:**
     Click the login button to authenticate using your Wikimedia account via OAuth2.
 
-4.  **Define Filters:**
+5.  **Define Filters:**
     Navigate to the settings or filter management page to add SpEL-based rules.
      *Example Rule:*
     ```spel
@@ -71,8 +83,8 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
 The application uses `src/main/resources/application.properties` for core settings:
 
 -   **Server Port**: `server.port=8000`
--   **Database**: MySql
--   **JPA/Hibernate**: Configured for SQLite dialect.
+-   **Database**: MySQL (managed by Flyway)
+-   **JPA/Hibernate**: `spring.jpa.hibernate.ddl-auto=validate` ensuring schema changes are done through Flyway.
 
 ## Project Structure
 
@@ -89,7 +101,7 @@ The application uses `src/main/resources/application.properties` for core settin
 ## Technologies Used
 
 -   **Backend**: Java 17, Spring Boot 4.0.2
--   **Database**: SQLite
+-   **Database**: MySQL, Flyway (Migrations)
 -   **Streaming**: OkHttp (SSE)
 -   **Authentication**: ScribeJava (OAuth2)
 -   **Templating**: Thymeleaf
