@@ -9,7 +9,6 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
 -   **Multi-User Support**: Individual users can maintain their own set of private filter rules.
 -   **OAuth2 Integration**: Secure sign-in and authentication using Wikimedia OAuth2 (via Meta-Wiki or other MediaWiki instances).
 -   **Live Updates**: Filtered events are broadcasted to the web interface in real-time.
--   **Lightweight Storage**: Uses SQLite for efficient and easy-to-manage data storage.
 -   **Responsive UI**: Modern web interface for managing filters and viewing live streams.
 
 ## Prerequisites
