@@ -170,6 +170,7 @@ public class WikiStreamService {
         });
     }
 
+    @Deprecated
     private void broadcast(RecentChange rc) {
         emitters.entrySet().parallelStream().forEach(entry -> {
             SseEmitter emitter = entry.getKey();
