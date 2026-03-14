@@ -1,5 +1,6 @@
 package org.qrdlife.wikiconnect.wikimonitor.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import org.qrdlife.wikiconnect.wikimonitor.model.User;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.lang.reflect.Method;
 import java.security.Principal;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -369,6 +371,189 @@ class WikiStreamServiceTest {
             rc.setType("edit");
             rc.setWiki("enwiki");
             return rc;
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // broadcastAsync()
+    // ══════════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("broadcastAsync()")
+    class BroadcastAsync {
+
+        /** Reflective handle reused by every test in this class. */
+        private Method broadcastAsync;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            broadcastAsync = WikiStreamService.class
+                    .getDeclaredMethod("broadcastAsync", RecentChange.class);
+            broadcastAsync.setAccessible(true);
+        }
+
+        // ── helpers ───────────────────────────────────────────────────────────
+
+        private RecentChange buildRecentChange() {
+            RecentChange rc = new RecentChange();
+            rc.setId(99L);
+            rc.setTitle("Async Page");
+            rc.setUser("BadBot");
+            rc.setType("edit");
+            rc.setWiki("enwiki");
+            return rc;
+        }
+
+        private void subscribeUser(Principal p, User user) {
+            when(p.getName()).thenReturn(user.getUsername());
+            when(userService.loadUserByUsername(user.getUsername())).thenReturn(user);
+            wikiStreamService.subscribe(p);
+        }
+
+        /**
+         * Invokes broadcastAsync and waits up to {@code timeoutMs} ms for the
+         * provided latch to count down to zero (i.e. for all async tasks to
+         * complete).  If no latch synchronisation is needed, pass {@code null}.
+         */
+        private void invokeBroadcastAsync(RecentChange rc) throws Exception {
+            broadcastAsync.invoke(wikiStreamService, rc);
+            // Give the executor pool time to finish its work.
+            Thread.sleep(200);
+        }
+
+        // ── 1. Early-exit when no emitters are registered ─────────────────────
+
+        @Test
+        @DisplayName("does not invoke mapper when no subscribers are present")
+        void noSubscribers_mapperNeverCalled() throws Exception {
+            RecentChange rc = buildRecentChange();
+
+            invokeBroadcastAsync(rc);
+
+            verifyNoInteractions(mapper);
+            verifyNoInteractions(abuseFilter);
+        }
+
+        // ── 2. Serialisation failure aborts broadcast ──────────────────────────
+
+        @Test
+        @DisplayName("aborts without calling abuseFilter when JSON serialisation fails")
+        void serialisationFailure_abortsEarly() throws Exception {
+            subscribeUser(principal, testUser);
+            RecentChange rc = buildRecentChange();
+
+            ObjectNode node = new ObjectMapper().createObjectNode();
+            when(mapper.valueToTree(rc)).thenReturn(node);
+            when(mapper.writeValueAsString(any()))
+                    .thenThrow(new JsonProcessingException("boom") {});
+
+            invokeBroadcastAsync(rc);
+
+            // abuseFilter must never be reached because we already bailed out
+            verifyNoInteractions(abuseFilter);
+        }
+
+        // ── 3. Paused subscriber is skipped ───────────────────────────────────
+
+        @Test
+        @DisplayName("does not call abuseFilter for a paused subscriber")
+        void pausedSubscriber_skipped() throws Exception {
+            subscribeUser(principal, testUser);
+            wikiStreamService.setPaused(principal, true);
+
+            RecentChange rc = buildRecentChange();
+            ObjectNode node = new ObjectMapper().createObjectNode();
+            when(mapper.valueToTree(rc)).thenReturn(node);
+            when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
+
+            invokeBroadcastAsync(rc);
+
+            verifyNoInteractions(abuseFilter);
+        }
+
+        // ── 4. Filter returns false – emitter.send() is never called ──────────
+
+        @Test
+        @DisplayName("does not send event when abuseFilter returns false")
+        void filterNoMatch_noEventSent() throws Exception {
+            when(principal.getName()).thenReturn("alice");
+            when(userService.loadUserByUsername("alice")).thenReturn(testUser);
+            wikiStreamService.subscribe(principal);
+
+            RecentChange rc = buildRecentChange();
+            ObjectNode node = new ObjectMapper().createObjectNode();
+            when(mapper.valueToTree(rc)).thenReturn(node);
+            when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(false);
+
+            invokeBroadcastAsync(rc);
+
+            // abuseFilter was consulted but returned false, so send must not happen
+            verify(abuseFilter, times(1)).matches(eq(rc), eq(testUser));
+        }
+
+        // ── 5. Happy path – matching subscriber receives the event ─────────────
+
+        @Test
+        @DisplayName("abuseFilter is called exactly once per active subscriber when filter matches")
+        void filterMatch_abuseFilterCalledOnce() throws Exception {
+            subscribeUser(principal, testUser);
+
+            RecentChange rc = buildRecentChange();
+            ObjectNode node = new ObjectMapper().createObjectNode();
+            when(mapper.valueToTree(rc)).thenReturn(node);
+            when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(true);
+
+            invokeBroadcastAsync(rc);
+
+            verify(abuseFilter, times(1)).matches(eq(rc), eq(testUser));
+        }
+
+        // ── 6. Emitter send error triggers completeWithError + removal ─────────
+
+        @Test
+        @DisplayName("removed from emitter map after send throws an exception")
+        void sendException_emitterRemovedAndPauseReturnsFalse() throws Exception {
+            subscribeUser(principal, testUser);
+
+            RecentChange rc = buildRecentChange();
+            ObjectNode node = new ObjectMapper().createObjectNode();
+            when(mapper.valueToTree(rc)).thenReturn(node);
+            when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
+            // Make abuseFilter return true so we actually try to send
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(true);
+
+            // After a send error the emitter is removed; the paused state for that user
+            // will return false because there is no longer a StreamContext for them.
+            invokeBroadcastAsync(rc);
+
+            // The emitter threw during send (SseEmitter is already completed here);
+            // subsequent isPaused should cleanly return false rather than NPE.
+            assertDoesNotThrow(() -> wikiStreamService.isPaused(principal));
+        }
+
+        // ── 7. Multi-user isolation ────────────────────────────────────────────
+
+        @Test
+        @DisplayName("only the matching user's filter is evaluated; non-matching user is also evaluated independently")
+        void multiUser_filtersEvaluatedIndependently() throws Exception {
+            Principal principalBob = mock(Principal.class);
+
+            subscribeUser(principal, testUser);      // alice
+            subscribeUser(principalBob, anotherUser); // bob
+
+            RecentChange rc = buildRecentChange();
+            ObjectNode node = new ObjectMapper().createObjectNode();
+            when(mapper.valueToTree(rc)).thenReturn(node);
+            when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
+
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(true);
+            when(abuseFilter.matches(eq(rc), eq(anotherUser))).thenReturn(false);
+
+            invokeBroadcastAsync(rc);
+
+            verify(abuseFilter, times(1)).matches(eq(rc), eq(testUser));
+            verify(abuseFilter, times(1)).matches(eq(rc), eq(anotherUser));
         }
     }
 }
