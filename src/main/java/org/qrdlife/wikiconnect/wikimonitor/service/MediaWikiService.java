@@ -136,6 +136,11 @@ public class MediaWikiService {
     }
 
     public DiffContent loadDiff(Long oldRevision, Long newRevision) {
+        if (oldRevision == null || newRevision == null) {
+            log.debug("loadDiff called with null revision(s): old={}, new={} — returning empty diff", oldRevision, newRevision);
+            return new DiffContent("", "");
+        }
+
         String key = getCacheKey("loadDiff", oldRevision, newRevision);
         DiffContent cached = (DiffContent) responseCache.getIfPresent(key);
         if (cached != null) {

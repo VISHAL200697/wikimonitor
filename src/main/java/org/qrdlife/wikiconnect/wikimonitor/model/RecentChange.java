@@ -106,6 +106,17 @@ public class RecentChange {
                 return;
             }
 
+            // Some event types (e.g. log entries, new-page creations) have no
+            // previous revision. Skip the API call rather than passing null into
+            // Map.of(), which forbids null values and throws NPE.
+            if (revision == null || revision.get("old") == null || revision.get("new") == null) {
+                log.debug("Skipping diff load – revision map incomplete: {}", revision);
+                this.lineAdded = "";
+                this.lineRemoved = "";
+                this.diffLoaded = true;
+                return;
+            }
+
             var api = WikiMonitorApplication.getApiMediaWiki(serverUrl);
             var service = new org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService(api);
             var diffContent = service.loadDiff(revision.get("old"), revision.get("new"));
