@@ -1,5 +1,6 @@
 package org.qrdlife.wikiconnect.wikimonitor.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
@@ -21,9 +22,13 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.security.Principal;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -41,7 +46,14 @@ public class WikiStreamService {
     private final AbuseFilterService abuseFilter;
     private final UserService userService;
     private final Map<SseEmitter, StreamContext> emitters = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
+    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+            2,
+            8,
+            60,
+            TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(1000),
+            new ThreadPoolExecutor.CallerRunsPolicy());
     private EventSource eventSource;
 
     private volatile String lastEventId;
@@ -91,7 +103,7 @@ public class WikiStreamService {
                 // Global pause check removed
                 try {
                     RecentChange rc = mapper.readValue(data, RecentChange.class);
-                    broadcast(rc);
+                    broadcastAsync(rc);
                 } catch (Exception e) {
                     log.error("Error processing event: {}", e.getMessage());
                 }
@@ -123,6 +135,42 @@ public class WikiStreamService {
         }
     }
 
+    private void broadcastAsync(RecentChange rc) {
+        if (emitters.isEmpty())
+            return;
+
+        String payload;
+        try {
+            ObjectNode node = mapper.valueToTree(rc);
+            node.put("flagged", true);
+            payload = mapper.writeValueAsString(node);
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing RecentChange", e);
+            return;
+        }
+
+        emitters.forEach((emitter, context) -> {
+            if (context.paused)
+                return;
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    if (abuseFilter.matches(rc, context.user)) {
+                        SseEmitter.SseEventBuilder event = SseEmitter.event()
+                                .id(lastEventId)
+                                .data(payload);
+
+                        emitter.send(event);
+                    }
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                    emitters.remove(emitter);
+                }
+            }, executor);
+        });
+    }
+
+    @Deprecated
     private void broadcast(RecentChange rc) {
         emitters.entrySet().parallelStream().forEach(entry -> {
             SseEmitter emitter = entry.getKey();
@@ -206,6 +254,9 @@ public class WikiStreamService {
     }
 
     public void updateUser(User updatedUser) {
+        if (updatedUser == null || updatedUser.getId() == null) {
+            return;
+        }
         emitters.values().stream()
                 .filter(ctx -> ctx.user.getId().equals(updatedUser.getId()))
                 .forEach(ctx -> ctx.user = updatedUser);
