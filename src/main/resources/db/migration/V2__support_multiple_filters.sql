@@ -45,7 +45,7 @@ SELECT
     b'1'                                             -- Default to active
 FROM users u
 WHERE u.filter_code IS NOT NULL
-  AND TRIM(u.filter_code) <> '';
+  AND TRIM(u.filter_code) != ''
 
 -- =========================================================
 -- 3. Insert default application setting
