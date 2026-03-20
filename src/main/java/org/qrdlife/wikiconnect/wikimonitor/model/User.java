@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "users")
@@ -26,8 +27,12 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String username;
 
+    @Deprecated // deprecated: use filters table instead
     @Column(columnDefinition = "TEXT")
     private String filterCode;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Filter> filters = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean approved = false;

@@ -58,7 +58,6 @@ class WikiStreamServiceTest {
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("alice");
-        testUser.setFilterCode("user == 'BadActor'");
 
         anotherUser = new User();
         anotherUser.setId(2L);
@@ -242,7 +241,6 @@ class WikiStreamServiceTest {
             User updated = new User();
             updated.setId(1L);
             updated.setUsername("alice");
-            updated.setFilterCode("bot == true");
 
             assertDoesNotThrow(() -> wikiStreamService.updateUser(updated));
         }
@@ -287,7 +285,7 @@ class WikiStreamServiceTest {
         void noExceptionWhenFilterRejectsEvent() throws Exception {
             when(principal.getName()).thenReturn("alice");
             when(userService.loadUserByUsername("alice")).thenReturn(testUser);
-            when(abuseFilter.matches(any(RecentChange.class), eq(testUser))).thenReturn(false);
+            when(abuseFilter.matches(any(RecentChange.class), eq(testUser))).thenReturn(java.util.List.of());
 
             wikiStreamService.subscribe(principal);
 
@@ -304,7 +302,7 @@ class WikiStreamServiceTest {
             RecentChange rc = buildRecentChange();
 
             // Stub filter to match
-            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(true);
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of("Test Filter"));
 
             // Stub mapper to return a valid ObjectNode to avoid NPE inside broadcast
             ObjectNode node = new ObjectMapper().createObjectNode();
@@ -331,7 +329,7 @@ class WikiStreamServiceTest {
             when(userService.loadUserByUsername("alice")).thenReturn(testUser);
 
             RecentChange rc = buildRecentChange();
-            when(abuseFilter.matches(any(), any())).thenReturn(true);
+            when(abuseFilter.matches(any(), any())).thenReturn(java.util.List.of("Test Filter"));
 
             wikiStreamService.subscribe(principal);
             wikiStreamService.setPaused(principal, true); // Alice is paused
@@ -351,7 +349,7 @@ class WikiStreamServiceTest {
             wikiStreamService.subscribe(null); // anonymous – no StreamContext stored
 
             RecentChange rc = buildRecentChange();
-            when(abuseFilter.matches(any(), any())).thenReturn(true);
+            when(abuseFilter.matches(any(), any())).thenReturn(java.util.List.of("Test Filter"));
 
             var broadcastMethod = WikiStreamService.class
                     .getDeclaredMethod("broadcast", RecentChange.class);
@@ -483,7 +481,7 @@ class WikiStreamServiceTest {
             ObjectNode node = new ObjectMapper().createObjectNode();
             when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
-            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(false);
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of());
 
             invokeBroadcastAsync(rc);
 
@@ -502,7 +500,7 @@ class WikiStreamServiceTest {
             ObjectNode node = new ObjectMapper().createObjectNode();
             when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
-            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(true);
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of("Test Filter"));
 
             invokeBroadcastAsync(rc);
 
@@ -521,7 +519,7 @@ class WikiStreamServiceTest {
             when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
             // Make abuseFilter return true so we actually try to send
-            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(true);
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of("Test Filter"));
 
             // After a send error the emitter is removed; the paused state for that user
             // will return false because there is no longer a StreamContext for them.
@@ -547,8 +545,8 @@ class WikiStreamServiceTest {
             when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
 
-            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(true);
-            when(abuseFilter.matches(eq(rc), eq(anotherUser))).thenReturn(false);
+            when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of("Test Filter"));
+            when(abuseFilter.matches(eq(rc), eq(anotherUser))).thenReturn(java.util.List.of());
 
             invokeBroadcastAsync(rc);
 

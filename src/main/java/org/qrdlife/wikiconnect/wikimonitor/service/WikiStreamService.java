@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -155,10 +156,16 @@ public class WikiStreamService {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    if (abuseFilter.matches(rc, context.user)) {
+                    List<String> matchedFilters = abuseFilter.matches(rc, context.user);
+                    if (!matchedFilters.isEmpty()) {
+                        ObjectNode node = mapper.valueToTree(rc);
+                        node.put("flagged", true);
+                        node.putPOJO("matchedFilters", matchedFilters);
+                        String userPayload = mapper.writeValueAsString(node);
+
                         SseEmitter.SseEventBuilder event = SseEmitter.event()
                                 .id(lastEventId)
-                                .data(payload);
+                                .data(userPayload);
 
                         emitter.send(event);
                     }
@@ -180,10 +187,11 @@ public class WikiStreamService {
                 return;
             }
             try {
-                boolean matches = abuseFilter.matches(rc, context.user);
-                if (matches) {
+                List<String> matchedFilters = abuseFilter.matches(rc, context.user);
+                if (!matchedFilters.isEmpty()) {
                     ObjectNode node = mapper.valueToTree(rc);
                     node.put("flagged", true);
+                    node.putPOJO("matchedFilters", matchedFilters);
                     log.debug("Broadcasting match to {}", context.user.getUsername());
                     emitter.send(mapper.writeValueAsString(node));
                 }

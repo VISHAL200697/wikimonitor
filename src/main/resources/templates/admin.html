@@ -118,15 +118,15 @@
                     </div>
                 </div>
 
-                <!-- Registration Settings -->
+                <!-- System Settings -->
                 <div class="col-md-5">
                     <div class="card h-100 border-0 shadow-sm bg-primary-subtle">
                         <div class="card-body p-4 d-flex flex-column justify-content-center">
                             <h5 class="card-title fw-bold text-primary-emphasis mb-3">
-                                <i class="bi bi-shield-check me-2"></i>Registration Policy
+                                <i class="bi bi-gear me-2"></i>System Settings
                             </h5>
                             <form id="autoApproveForm" method="post" th:action="@{/admin/settings/auto-approve}"
-                                class="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 shadow-sm">
+                                class="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 shadow-sm mb-3">
                                 <div>
                                     <h6 class="mb-0 fw-semibold text-dark">Auto-approve Users</h6>
                                     <small class="text-muted">Automatically grant access to new signups</small>
@@ -138,6 +138,17 @@
                                         id="autoApproveSwitch" th:checked="${autoApproveEnabled}"
                                         onchange="document.getElementById('autoApproveValue').value = this.checked; document.getElementById('autoApproveForm').submit()"
                                         style="cursor: pointer;">
+                                </div>
+                            </form>
+
+                            <form id="maxFiltersForm" method="post" th:action="@{/admin/settings/max-filters}"
+                                class="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 shadow-sm">
+                                <div>
+                                    <h6 class="mb-0 fw-semibold text-dark">Max Active Filters</h6>
+                                    <small class="text-muted">Per user threshold</small>
+                                </div>
+                                <div class="m-0" style="width: 80px;">
+                                    <input type="number" name="maxActiveFilters" th:value="${maxActiveFilters}" class="form-control" min="1" max="50" onchange="document.getElementById('maxFiltersForm').submit()">
                                 </div>
                             </form>
                         </div>

@@ -32,6 +32,7 @@ public class AdminController {
         model.addAttribute("users", userPage);
         model.addAttribute("search", search);
         model.addAttribute("autoApproveEnabled", settingsService.isAutoApproveEnabled());
+        model.addAttribute("maxActiveFilters", settingsService.getMaxActiveFiltersPerUser());
         return "admin";
     }
 
@@ -58,6 +59,12 @@ public class AdminController {
     @PostMapping("/settings/auto-approve")
     public String toggleAutoApprove(@RequestParam(defaultValue = "false") boolean enabled) {
         settingsService.setAutoApprove(enabled);
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/settings/max-filters")
+    public String updateMaxFilters(@RequestParam int maxActiveFilters) {
+        settingsService.setMaxActiveFiltersPerUser(maxActiveFilters);
         return "redirect:/admin";
     }
 }
