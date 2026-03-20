@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS filters (
     user_id BIGINT NOT NULL,                  -- Reference to users table
     name VARCHAR(255) NOT NULL,               -- User-defined filter name
     filter_code TEXT,                         -- The actual filter logic/code
-    is_active BIT(1) NOT NULL DEFAULT b'1',   -- Whether the filter is active
+    is_active TINYINT(1) NOT NULL DEFAULT 1,   -- Whether the filter is active
     PRIMARY KEY (id),
 
     -- Foreign key constraint to enforce relationship with users table
@@ -42,10 +42,10 @@ SELECT
     u.id,                                            -- Link to user
     CONCAT('Default Filter #', u.id),                 -- Auto-generated name
     u.filter_code,                                   -- Existing filter logic
-    b'1'                                             -- Default to active
+    1                                             -- Default to active
 FROM users u
 WHERE u.filter_code IS NOT NULL
-  AND TRIM(u.filter_code) != ''
+  AND TRIM(u.filter_code) != '';
 
 -- =========================================================
 -- 3. Insert default application setting
