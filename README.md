@@ -13,7 +13,7 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
 
 ## Prerequisites
 
--   **Java**: Version 17 or higher.
+-   **Java**: Version 21 or higher.
 -   **Diff Utilities**: `diff` command line tool (usually available on Linux/Unix).
 -   **Wikimedia Account**: Required for OAuth2 authentication.
 
@@ -99,7 +99,7 @@ The application uses `src/main/resources/application.properties` for core settin
 
 ## Technologies Used
 
--   **Backend**: Java 17, Spring Boot 4.0.2
+-   **Backend**: Java 21, Spring Boot 4.0.2
 -   **Database**: MySQL, Flyway (Migrations)
 -   **Streaming**: OkHttp (SSE)
 -   **Authentication**: ScribeJava (OAuth2)
