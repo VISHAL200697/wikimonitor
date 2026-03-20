@@ -48,13 +48,7 @@ public class WikiStreamService {
     private final UserService userService;
     private final Map<SseEmitter, StreamContext> emitters = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
-    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
-            2,
-            8,
-            60,
-            TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(1000),
-            new ThreadPoolExecutor.CallerRunsPolicy());
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private EventSource eventSource;
 
     private volatile String lastEventId;
