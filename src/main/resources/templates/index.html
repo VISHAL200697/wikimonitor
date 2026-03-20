@@ -87,7 +87,7 @@
 
     </div>
 
-    <!-- Filter Modal (Kept same) -->
+    <!-- Filter Modal -->
     <div class="modal fade" id="filterModal" role="dialog" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -96,14 +96,46 @@
                     <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label text-muted small" for="filterCode">Enter one SpEL condition per
-                            line.</label>
-                        <textarea class="form-control font-monospace" id="filterCode"
-                            placeholder="wiki == 'enwiki'&#10;type == 'edit'" rows="10"></textarea>
+                    <!-- List View -->
+                    <div id="filterListContainer">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Your Filters</h6>
+                            <button class="btn btn-sm btn-primary" id="showCreateFilterBtn">
+                                <i class="bi bi-plus-lg me-1"></i>New Filter
+                            </button>
+                        </div>
+                        <div class="list-group" id="filterList">
+                            <div class="text-center text-muted p-4"><div class="spinner-border spinner-border-sm"></div> Loading filters...</div>
+                        </div>
                     </div>
-                    <div class="text-end">
-                        <button class="btn btn-primary" id="saveFilterBtn" type="button">Save Script</button>
+
+                    <!-- Editor View -->
+                    <div id="filterFormContainer" class="d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0" id="filterFormTitle">Create New Filter</h6>
+                            <button class="btn btn-sm btn-outline-secondary" id="cancelFilterFormBtn">
+                                <i class="bi bi-arrow-left me-1"></i>Back to List
+                            </button>
+                        </div>
+                        <input type="hidden" id="editFilterId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold mb-1" for="filterNameInput">Filter Name</label>
+                            <input class="form-control form-control-sm" id="filterNameInput" placeholder="e.g. Watchlist, Vandalism" type="text" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold mb-1" for="filterCode">Filter Rules (SpEL)</label>
+                            <small class="d-block text-muted mb-2">Enter one SpEL condition per line.</small>
+                            <div class="border rounded" style="background:#fff;">
+                                <textarea class="form-control font-monospace border-0" id="filterCode"
+                                    placeholder="wiki == 'enwiki'&#10;type == 'edit'" rows="10" style="resize:none; padding:10px;"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-success" id="saveFilterBtn" type="button">Save Filter</button>
+                        </div>
                     </div>
                 </div>
             </div>

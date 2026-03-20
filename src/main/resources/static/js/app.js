@@ -125,6 +125,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         actionsDiv.appendChild(linksDiv);
         actionsDiv.appendChild(dismissBtn);
+
+        // Matched Filters section (above actions footer)
+        if (event.matchedFilters && event.matchedFilters.length > 0) {
+            const filtersDiv = document.createElement('div');
+            filtersDiv.className = 'matched-filters pt-2 pb-1';
+            // Deduplicate using Set
+            const uniqueNames = [...new Set(event.matchedFilters)];
+            filtersDiv.innerHTML = '<small class="text-muted me-1"><i class="bi bi-funnel-fill"></i> Matched by:</small>'
+                + uniqueNames.map(name =>
+                    `<span class="badge bg-warning text-dark me-1">${escapeHtml(name)}</span>`
+                ).join('');
+            card.appendChild(filtersDiv);
+        }
+
         card.appendChild(actionsDiv);
 
         // Click Handler (Load Diff)
@@ -541,43 +555,186 @@ document.addEventListener('DOMContentLoaded', () => {
         return found;
     }
 
-    // Update filterBtn to refresh CM
-    filterBtn.addEventListener('click', () => {
-        filterModal.show();
-        fetch('/api/filter/code')
-            .then(res => res.text())
-            .then(code => {
-                if (cmEditor) {
-                    // CM6 dispatch to replace doc
-                    cmEditor.dispatch({
-                        changes: { from: 0, to: cmEditor.state.doc.length, insert: code || '' }
-                    });
-                } else {
-                    filterCode.value = code;
-                }
-            });
-    });
+    // --- New Filter Logic ---
+    const filterListContainer = document.getElementById('filterListContainer');
+    const filterFormContainer = document.getElementById('filterFormContainer');
+    const filterList = document.getElementById('filterList');
+    const showCreateFilterBtn = document.getElementById('showCreateFilterBtn');
+    const cancelFilterFormBtn = document.getElementById('cancelFilterFormBtn');
+    const filterNameInput = document.getElementById('filterNameInput');
+    const editFilterId = document.getElementById('editFilterId');
+    const filterFormTitle = document.getElementById('filterFormTitle');
 
-    saveFilterBtn.addEventListener('click', () => {
-        const code = cmEditor ? cmEditor.state.doc.toString() : filterCode.value;
-        const csrfToken = getCookie('XSRF-TOKEN');
-        fetch('/api/filter/code', {
-            method: 'POST',
-            body: code,
-            headers: csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}
-        })
+    function loadFilters() {
+        if (!filterList) return;
+        filterList.innerHTML = '<div class="text-center text-muted p-4"><div class="spinner-border spinner-border-sm"></div> Loading filters...</div>';
+        fetch('/api/filters')
             .then(res => {
+                if (!res.ok) throw new Error('Failed to load filters');
+                return res.json();
+            })
+            .then(filters => {
+                filterList.innerHTML = '';
+                if(filters.length === 0) {
+                    filterList.innerHTML = '<div class="text-center text-muted p-4">No filters created yet.</div>';
+                    return;
+                }
+                filters.forEach(filter => {
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item d-flex justify-content-between align-items-center mb-1 rounded border';
+                    item.innerHTML = `
+                        <div>
+                            <span class="fw-bold fs-6">${escapeHtml(filter.name)}</span>
+                            <span class="badge ${filter.active ? 'bg-success' : 'bg-secondary'} ms-2">${filter.active ? 'Active' : 'Inactive'}</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${filter.id}" title="Edit filter"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-primary toggle-btn" data-id="${filter.id}">${filter.active ? 'Deactivate' : 'Activate'}</button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${filter.id}"><i class="bi bi-trash"></i></button>
+                        </div>
+                    `;
+                    // Add listeners
+                    item.querySelector('.edit-btn').addEventListener('click', () => editFilter(filter));
+                    item.querySelector('.toggle-btn').addEventListener('click', () => toggleFilter(filter.id, filter.active));
+                    item.querySelector('.delete-btn').addEventListener('click', () => deleteFilter(filter.id));
+                    filterList.appendChild(item);
+                });
+            })
+            .catch(err => {
+                filterList.innerHTML = '<div class="text-center text-danger p-4">Error loading filters.</div>';
+                showToast(err.message, 'error');
+            });
+    }
+
+    function toggleFilter(id, currentState) {
+        const csrfToken = getCookie('XSRF-TOKEN');
+        const headers = { 'Content-Type': 'application/json' };
+        if (csrfToken) headers['X-XSRF-TOKEN'] = csrfToken;
+
+        fetch(`/api/filters/${id}/toggle`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ active: !currentState })
+        }).then(res => {
+            if(!res.ok) {
+                res.json().then(data => showToast(data.message || 'Error toggling filter', 'error'));
+            } else {
+                loadFilters();
+            }
+        });
+    }
+
+    function deleteFilter(id) {
+        if(!confirm('Are you sure you want to delete this filter?')) return;
+        const csrfToken = getCookie('XSRF-TOKEN');
+        const headers = {};
+        if (csrfToken) headers['X-XSRF-TOKEN'] = csrfToken;
+
+        fetch(`/api/filters/${id}/delete`, {
+            method: 'POST',
+            headers: headers
+        }).then(res => {
+            if(!res.ok) {
+                showToast('Error deleting filter', 'error');
+            } else {
+                loadFilters();
+            }
+        });
+    }
+
+    if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+            filterListContainer.classList.remove('d-none');
+            filterFormContainer.classList.add('d-none');
+            loadFilters();
+            filterModal.show();
+        });
+    }
+
+    function editFilter(filter) {
+        filterListContainer.classList.add('d-none');
+        filterFormContainer.classList.remove('d-none');
+        filterFormTitle.textContent = 'Edit Filter';
+        editFilterId.value = filter.id;
+        filterNameInput.value = filter.name || '';
+        const code = filter.filterCode || '';
+        if (cmEditor) {
+            cmEditor.dispatch({ changes: { from: 0, to: cmEditor.state.doc.length, insert: code } });
+        } else {
+            document.getElementById('filterCode').value = code;
+        }
+    }
+
+    if (showCreateFilterBtn) {
+        showCreateFilterBtn.addEventListener('click', () => {
+            filterListContainer.classList.add('d-none');
+            filterFormContainer.classList.remove('d-none');
+            filterFormTitle.textContent = 'Create New Filter';
+            editFilterId.value = '';
+            filterNameInput.value = '';
+            if (cmEditor) {
+                cmEditor.dispatch({ changes: { from: 0, to: cmEditor.state.doc.length, insert: '' } });
+            } else {
+                document.getElementById('filterCode').value = '';
+            }
+        });
+    }
+
+    if (cancelFilterFormBtn) {
+        cancelFilterFormBtn.addEventListener('click', () => {
+            filterListContainer.classList.remove('d-none');
+            filterFormContainer.classList.add('d-none');
+            loadFilters();
+        });
+    }
+
+    if (saveFilterBtn) {
+        saveFilterBtn.addEventListener('click', () => {
+            const code = cmEditor ? cmEditor.state.doc.toString() : document.getElementById('filterCode').value;
+            const name = filterNameInput.value.trim();
+            const existingId = editFilterId.value;
+
+            if (!name) {
+                showToast('Filter name is required', 'error');
+                return;
+            }
+
+            const csrfToken = getCookie('XSRF-TOKEN');
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfToken) headers['X-XSRF-TOKEN'] = csrfToken;
+
+            saveFilterBtn.disabled = true;
+            saveFilterBtn.textContent = 'Saving...';
+
+            const url = existingId
+                ? `/api/filters/${existingId}/update`
+                : '/api/filters/create';
+
+            fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ name: name, filterCode: code })
+            })
+            .then(res => {
+                saveFilterBtn.disabled = false;
                 if (res.ok) {
                     saveFilterBtn.textContent = 'Saved!';
-                    saveFilterBtn.classList.replace('btn-primary', 'btn-success');
                     setTimeout(() => {
-                        saveFilterBtn.textContent = 'Save Script';
-                        saveFilterBtn.classList.replace('btn-success', 'btn-primary');
-                        filterModal.hide();
-                    }, 1000);
+                        saveFilterBtn.textContent = 'Save Filter';
+                        cancelFilterFormBtn.click();
+                    }, 800);
+                } else {
+                    saveFilterBtn.textContent = 'Save Filter';
+                    res.json().then(data => showToast(data.message || 'Error saving filter', 'error'));
                 }
+            })
+            .catch(err => {
+                saveFilterBtn.disabled = false;
+                saveFilterBtn.textContent = 'Save Filter';
+                showToast('Network error', 'error');
             });
-    });
+        });
+    }
 
     // Start
     connect();

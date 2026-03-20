@@ -37,7 +37,9 @@ import java.util.List;
 public class AbuseFilterService {
 
     private final ExpressionParser parser = new SpelExpressionParser();
+    private final org.qrdlife.wikiconnect.wikimonitor.repository.FilterRepository filterRepository;
     private final java.util.Map<Long, List<org.springframework.expression.Expression>> expressionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<Long, List<org.qrdlife.wikiconnect.wikimonitor.model.Filter>> userFiltersCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     private static final org.springframework.expression.spel.support.ReflectiveMethodResolver REFLECTIVE_METHOD_RESOLVER = new org.springframework.expression.spel.support.ReflectiveMethodResolver();
 
@@ -62,79 +64,19 @@ public class AbuseFilterService {
      *
      * @param rc   The RecentChange event to evaluate.
      * @param user The user whose rules should be applied.
-     * @return true if the event matches all valid rules, false otherwise.
+     * @return List of matching filter names (empty if no match).
      */
-    public boolean matches(RecentChange rc, User user) {
+    public List<String> matches(RecentChange rc, User user) {
         if (rc == null || user == null)
-            return false;
+            return java.util.Collections.emptyList();
 
-        String code = user.getFilterCode();
-        if (code == null || code.trim().isEmpty()) {
-            return false; // No filters, show nothing? Or show everything?
-            // Request said: "If the first filter fails...". Implies filtering down.
-            // Typically if no filters, user probably wants to see everything?
-            // "I would like to make the filters appear in a single input... execute them in
-            // order."
-            // If input is empty, maybe nothing matches? Or maybe everything?
-            // Let's assume valid filter is required to match anything for now, or maybe if
-            // empty, match everything?
-            // Actually, if I want to "filter", usually empty means no constraints -> show
-            // all?
-            // But previous logic was "List of rules", if empty list -> show nothing (based
-            // on app.js `if (!event.flagged) return;`).
-            // Only flagged events were sent. Flagged meant at least one rule matched.
-            // So if no rules, nothing matches.
-            // I will stick to: If no code, return false (nothing matches).
+        List<org.qrdlife.wikiconnect.wikimonitor.model.Filter> activeFilters = userFiltersCache.computeIfAbsent(
+            user.getId(), id -> filterRepository.findByUserAndIsActiveTrue(user)
+        );
+        
+        if (activeFilters.isEmpty()) {
+            return java.util.Collections.emptyList();
         }
-
-        List<org.springframework.expression.Expression> expressions = expressionCache.computeIfAbsent(user.getId(),
-                k -> {
-                    List<org.springframework.expression.Expression> exprs = new java.util.ArrayList<>();
-                    StringBuilder currentExpression = new StringBuilder();
-
-                    for (String line : code.split("\\R")) {
-                        line = line.trim();
-                        if (line.isEmpty() || line.startsWith("#") || line.startsWith("//"))
-                            continue;
-
-                        // Check if line ends with an operator (&&, ||, and, or)
-                        // This allows spreading a single logical expression across multiple lines
-                        boolean endsWithOperator = line.matches("(?i).*\\s+(?:&&?|\\|\\|?|and|or)$");
-
-                        if (currentExpression.length() > 0) {
-                            currentExpression.append(" ");
-                        }
-                        currentExpression.append(line);
-
-                        if (!endsWithOperator) {
-                            // End of an expression statement
-                            try {
-                                exprs.add(parser.parseExpression(currentExpression.toString()));
-                            } catch (Exception e) {
-                                log.warn("Invalid expression for user {}: {}", user.getUsername(), currentExpression);
-                            }
-                            currentExpression.setLength(0);
-                        }
-                    }
-
-                    // If there is leftover content (e.g. last line ended with an operator, or just
-                    // no newline at end),
-                    // try to parse it.
-                    // Note: If last line ended with operator, SpEL parser will likely fail, which
-                    // is correct behavior for invalid syntax.
-                    if (currentExpression.length() > 0) {
-                        try {
-                            exprs.add(parser.parseExpression(currentExpression.toString()));
-                        } catch (Exception e) {
-                            log.warn("Invalid expression for user {}: {}", user.getUsername(), currentExpression);
-                        }
-                    }
-
-                    return exprs;
-                });
-
-        if (expressions.isEmpty())
-            return false;
 
         // Wrap RecentChange in FilterFunctions
         org.qrdlife.wikiconnect.wikimonitor.FilterFunctions root = new org.qrdlife.wikiconnect.wikimonitor.FilterFunctions(
@@ -153,34 +95,69 @@ public class AbuseFilterService {
                     return null;
                 })
                 .build();
-        log.debug("Evaluating {} rules for user {}", expressions.size(), user.getUsername());
-
-        for (org.springframework.expression.Expression expr : expressions) {
-            try {
-                Boolean result = expr.getValue(context, Boolean.class);
-                if (!Boolean.TRUE.equals(result)) {
-                    log.debug("Rule failed for user {}: {}", user.getUsername(), expr.getExpressionString());
-                    return false;
+        List<String> matched = new java.util.ArrayList<>();
+        
+        for (org.qrdlife.wikiconnect.wikimonitor.model.Filter f : activeFilters) {
+            String code = f.getFilterCode();
+            if (code == null || code.trim().isEmpty()) continue;
+            
+            List<org.springframework.expression.Expression> exprs = expressionCache.computeIfAbsent(f.getId(), k -> {
+                List<org.springframework.expression.Expression> parsed = new java.util.ArrayList<>();
+                String[] lines = code.split("\\r?\\n");
+                StringBuilder currentExpr = new StringBuilder();
+                for (String line : lines) {
+                    String trimmed = line.trim();
+                    if (trimmed.isEmpty() || trimmed.startsWith("#"))
+                        continue;
+                    currentExpr.append(line).append(" ");
+                    if (trimmed.endsWith("||") || trimmed.endsWith("&&") ||
+                            trimmed.toLowerCase().endsWith(" or") || trimmed.toLowerCase().endsWith(" and")) {
+                        continue;
+                    }
+                    try {
+                        parsed.add(parser.parseExpression(currentExpr.toString().trim()));
+                    } catch (Exception e) {
+                        log.warn("Invalid expression in filter {}: {}", f.getName(), e.getMessage());
+                    }
+                    currentExpr.setLength(0);
                 }
-            } catch (Exception e) {
-                log.warn("Filter execution error for user {}: {}", user.getUsername(), e.getMessage());
-                return false; // Error in execution -> fail
+                return parsed;
+            });
+            
+            if (exprs.isEmpty()) continue;
+            
+            boolean allStatementsMatched = true;
+            for (org.springframework.expression.Expression expr : exprs) {
+                try {
+                    Boolean result = expr.getValue(context, Boolean.class);
+                    if (!Boolean.TRUE.equals(result)) {
+                        log.debug("Rule failed for user {}: {}", user.getUsername(), expr.getExpressionString());
+                        allStatementsMatched = false;
+                        break;
+                    }
+                } catch (Exception e) {
+                    log.warn("Filter execution error for user {}: {}", user.getUsername(), e.getMessage());
+                    allStatementsMatched = false;
+                    break;
+                }
+            }
+            
+            if (allStatementsMatched) {
+                log.info("Match found for user {} on change {} by filter {}", user.getUsername(), rc.getTitle(), f.getName());
+                matched.add(f.getName());
             }
         }
 
-        log.info("Match found for user {} on change {}", user.getUsername(), rc.getTitle());
-        return true; // All passed
+        return matched; 
     }
 
-    /**
-     * Clears the compiled expression cache for a specific user.
-     * Should be called when a user updates their filter rules.
-     *
-     * @param user The user to refresh rules for.
-     */
     public void refreshRules(User user) {
         if (user != null && user.getId() != null) {
-            expressionCache.remove(user.getId());
+            userFiltersCache.remove(user.getId());
+            List<org.qrdlife.wikiconnect.wikimonitor.model.Filter> filters = filterRepository.findByUser(user);
+            for (org.qrdlife.wikiconnect.wikimonitor.model.Filter f : filters) {
+                expressionCache.remove(f.getId());
+            }
         }
     }
 }
