@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileBackBtn = document.getElementById('mobileBackBtn');
     const diffActions = document.getElementById('diffActions');
     const connectionStatus = document.getElementById('connectionStatus');
+    const keyboardShortcutsHint = document.getElementById('keyboardShortcutsHint');
 
     // Controls
     const pauseBtn = document.getElementById('pauseBtn');
@@ -21,6 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterCode = document.getElementById('filterCode');
 
     let eventSource = null;
+    let selectedEvent = null;
+
+    if (keyboardShortcutsHint && (typeof isLoggedIn === 'undefined' || !isLoggedIn)) {
+        keyboardShortcutsHint.classList.add('d-none');
+    }
+
+    function isTypingTarget(target) {
+        if (!target) return false;
+        const tag = target.tagName;
+        return target.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    }
 
     function getCookie(name) {
         const value = `; ${document.cookie}`;
@@ -163,6 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadDiff(event) {
+        selectedEvent = event;
+
         // Update Header
         currentWiki.textContent = event.wiki;
         currentTitle.textContent = event.title;
@@ -174,12 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const undoBtn = document.createElement('button');
                 undoBtn.className = 'btn btn-sm btn-outline-warning';
                 undoBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Undo';
+                undoBtn.title = 'Undo (U)';
                 undoBtn.onclick = () => performUndo(event);
                 diffActions.appendChild(undoBtn);
 
                 const rollbackBtn = document.createElement('button');
                 rollbackBtn.className = 'btn btn-sm btn-outline-danger';
                 rollbackBtn.innerHTML = '<i class="bi bi-rewind-fill"></i> Rollback';
+                rollbackBtn.title = 'Rollback (R)';
                 rollbackBtn.onclick = () => performRollback(event);
                 diffActions.appendChild(rollbackBtn);
             }
@@ -346,6 +362,23 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => showToast('Error: ' + err.message, 'error'));
     }
+
+    document.addEventListener('keydown', (e) => {
+        if (typeof isLoggedIn === 'undefined' || !isLoggedIn) return;
+        if (!selectedEvent) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (isTypingTarget(e.target)) return;
+        if (document.querySelector('.modal.show')) return;
+
+        const key = e.key.toLowerCase();
+        if (key === 'u') {
+            e.preventDefault();
+            performUndo(selectedEvent);
+        } else if (key === 'r') {
+            e.preventDefault();
+            performRollback(selectedEvent);
+        }
+    });
 
     // --- Navigation (Mobile) ---
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
