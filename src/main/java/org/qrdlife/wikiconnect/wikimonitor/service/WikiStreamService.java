@@ -23,13 +23,11 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,13 +46,7 @@ public class WikiStreamService {
     private final UserService userService;
     private final Map<SseEmitter, StreamContext> emitters = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
-    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
-            2,
-            8,
-            60,
-            TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(1000),
-            new ThreadPoolExecutor.CallerRunsPolicy());
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private EventSource eventSource;
 
     private volatile String lastEventId;
