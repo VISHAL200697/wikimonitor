@@ -5,6 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - WikiMonitor</title>
+    <script>
+        (() => {
+            try {
+                const t = localStorage.getItem('wikimonitor-theme');
+                if (t === 'light' || t === 'dark') {
+                    document.documentElement.setAttribute('data-theme', t);
+                }
+            } catch (e) {
+            }
+        })();
+    </script>
     <link th:href="@{/lib/bootstrap-5.3.2/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/lib/bootstrap-icons-1.13.1/css/bootstrap-icons.min.css}" rel="stylesheet">
     <link rel="icon" th:href="@{/images/icon.svg}" type="image/svg+xml">
@@ -64,6 +75,9 @@
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-secondary btn-sm" data-theme-toggle="true" aria-label="Toggle dark mode" aria-pressed="false" title="Switch theme">
+                        <i class="bi bi-moon-stars-fill"></i>
+                    </button>
                     <span class="text-secondary small d-none d-md-block">
                         Logged in as <span class="fw-bold text-dark" sec:authentication="name">User</span>
                     </span>
@@ -258,6 +272,7 @@
         </div>
     </main>
 
+    <script th:src="@{/js/theme.js}"></script>
     <script th:src="@{/lib/bootstrap-5.3.2/js/bootstrap.bundle.min.js}"></script>
 </body>
 
