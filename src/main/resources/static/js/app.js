@@ -22,6 +22,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let eventSource = null;
 
+    function getActiveTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    }
+
+    function applyDiffFrameTheme() {
+        const doc = diffFrame && (diffFrame.contentDocument || diffFrame.contentWindow?.document);
+        if (!doc || !doc.body) return;
+
+        const dark = getActiveTheme() === 'dark';
+        doc.body.style.background = dark ? '#0f172a' : '#ffffff';
+        doc.body.style.color = dark ? '#e2e8f0' : '#0f172a';
+
+        if (doc.head) {
+            let styleEl = doc.getElementById('wikimonitorDiffTheme');
+            if (!styleEl) {
+                styleEl = doc.createElement('style');
+                styleEl.id = 'wikimonitorDiffTheme';
+                doc.head.appendChild(styleEl);
+            }
+            styleEl.textContent = dark
+                ? `
+                    table.diff td.diff-context { background: #111827; color: #e2e8f0; }
+                    table.diff td.diff-marker { background: #1f2937; color: #93c5fd; }
+                    table.diff td.diff-deletedline { background: #3f1d1d; color: #fecaca; }
+                    table.diff td.diff-addedline { background: #0f2e1e; color: #bbf7d0; }
+                  `
+                : `
+                    table.diff td.diff-context { background: #ffffff; color: #0f172a; }
+                    table.diff td.diff-marker { background: #f8fafc; color: #2563eb; }
+                    table.diff td.diff-deletedline { background: #fee2e2; color: #7f1d1d; }
+                    table.diff td.diff-addedline { background: #dcfce7; color: #14532d; }
+                  `;
+        }
+    }
+
+    document.addEventListener('themechange', applyDiffFrameTheme);
+
     function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -216,11 +253,12 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`/api/diff?server=${server}&old=${oldRev}&new=${newRev}`)
             .then(res => res.text())
             .then(html => {
+                const dark = getActiveTheme() === 'dark';
                 const head = `
                     <head>
                         <link rel="stylesheet" href="https://www.mediawiki.org/w/load.php?modules=mediawiki.legacy.shared|mediawiki.diff.styles&only=styles">
                         <style>
-                            body { background: #fff; padding: 10px; font-size: 0.9rem; }
+                            body { background: ${dark ? '#0f172a' : '#ffffff'}; color: ${dark ? '#e2e8f0' : '#0f172a'}; padding: 10px; font-size: 0.9rem; }
                             table.diff { width: 100%; }
                         </style>
                     </head>
@@ -228,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 doc.open();
                 doc.write(head + '<body>' + html + '</body>');
                 doc.close();
+                applyDiffFrameTheme();
             })
             .catch(err => {
                 doc.body.innerHTML = '<div style="padding:20px; color:red;">Error loading diff</div>';
