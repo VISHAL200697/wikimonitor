@@ -94,12 +94,14 @@ public class WikiStreamService {
                     lastEventId = id;
                 }
                 // Global pause check removed
-                try {
-                    RecentChange rc = mapper.readValue(data, RecentChange.class);
-                    broadcastAsync(rc);
-                } catch (Exception e) {
-                    log.error("Error processing event: {}", e.getMessage());
-                }
+                executor.submit(() -> {
+                    try {
+                        RecentChange rc = mapper.readValue(data, RecentChange.class);
+                        broadcastAsync(rc);
+                    } catch (Exception e) {
+                        log.error("Error processing event: {}", e.getMessage());
+                    }
+                });
             }
 
             @Override
