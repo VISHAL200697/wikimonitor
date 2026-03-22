@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class FilterFunctions {
 
@@ -211,7 +212,11 @@ public class FilterFunctions {
         if (text == null || regex == null) {
             return false;
         }
-        return Pattern.compile(regex).matcher(text).find();
+        try {
+            return Pattern.compile(regex).matcher(text).find();
+        } catch (PatternSyntaxException e) {
+            return false;
+        }
     }
 
     public int regexCount(String text, String regex) {
