@@ -171,30 +171,6 @@ public class WikiStreamService {
         });
     }
 
-    @Deprecated
-    private void broadcast(RecentChange rc) {
-        emitters.entrySet().parallelStream().forEach(entry -> {
-            SseEmitter emitter = entry.getKey();
-            StreamContext context = entry.getValue();
-
-            if (context.paused) {
-                return;
-            }
-            try {
-                List<String> matchedFilters = abuseFilter.matches(rc, context.user);
-                if (!matchedFilters.isEmpty()) {
-                    ObjectNode node = mapper.valueToTree(rc);
-                    node.put("flagged", true);
-                    node.putPOJO("matchedFilters", matchedFilters);
-                    log.debug("Broadcasting match to {}", context.user.getUsername());
-                    emitter.send(mapper.writeValueAsString(node));
-                }
-            } catch (Exception e) {
-                emitters.remove(emitter);
-            }
-        });
-    }
-
     /**
      * Subscribes a client to the event stream.
      *
