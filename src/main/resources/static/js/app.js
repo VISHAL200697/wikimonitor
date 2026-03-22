@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterCode = document.getElementById('filterCode');
 
     let eventSource = null;
+    let selectedEvent = null;
+
+    function isTypingTarget(target) {
+        if (!target) return false;
+        const tag = target.tagName;
+        return target.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    }
 
     function getActiveTheme() {
         return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -200,6 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadDiff(event) {
+        selectedEvent = event;
+
         // Update Header
         currentWiki.textContent = event.wiki;
         currentTitle.textContent = event.title;
@@ -211,12 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const undoBtn = document.createElement('button');
                 undoBtn.className = 'btn btn-sm btn-outline-warning';
                 undoBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Undo';
+                undoBtn.title = 'Undo (U)';
                 undoBtn.onclick = () => performUndo(event);
                 diffActions.appendChild(undoBtn);
 
                 const rollbackBtn = document.createElement('button');
                 rollbackBtn.className = 'btn btn-sm btn-outline-danger';
                 rollbackBtn.innerHTML = '<i class="bi bi-rewind-fill"></i> Rollback';
+                rollbackBtn.title = 'Rollback (R)';
                 rollbackBtn.onclick = () => performRollback(event);
                 diffActions.appendChild(rollbackBtn);
             }
@@ -300,11 +311,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Undo Modal Logic ---
-    const undoModal = new bootstrap.Modal(document.getElementById('undoModal'));
+    const undoModalEl = document.getElementById('undoModal');
+    const undoModal = new bootstrap.Modal(undoModalEl);
     const undoPageTitle = document.getElementById('undoPageTitle');
     const undoSummaryInput = document.getElementById('undoSummary');
     const confirmUndoBtn = document.getElementById('confirmUndoBtn');
     let currentUndoEvent = null;
+
+    undoModalEl.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        if (!undoModalEl.classList.contains('show')) return;
+        if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.target && e.target.closest('[data-bs-dismiss="modal"]')) return;
+        e.preventDefault();
+        if (!confirmUndoBtn.disabled) {
+            confirmUndoBtn.click();
+        }
+    });
 
     function performUndo(event) {
         currentUndoEvent = event;
@@ -385,6 +408,23 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => showToast('Error: ' + err.message, 'error'));
     }
+
+    document.addEventListener('keydown', (e) => {
+        if (typeof isLoggedIn === 'undefined' || !isLoggedIn) return;
+        if (!selectedEvent) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (isTypingTarget(e.target)) return;
+        if (document.querySelector('.modal.show')) return;
+
+        const key = e.key.toLowerCase();
+        if (key === 'u') {
+            e.preventDefault();
+            performUndo(selectedEvent);
+        } else if (key === 'r') {
+            e.preventDefault();
+            performRollback(selectedEvent);
+        }
+    });
 
     // --- Navigation (Mobile) ---
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
