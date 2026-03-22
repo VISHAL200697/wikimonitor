@@ -293,16 +293,10 @@ public class FilterFunctions {
     }
 
     public boolean allContains(String text, List<String> list) {
-        if (text == null || list == null) {
-            return false;
-        }
-
-        for (String item : list) {
-            if (item != null && !text.contains(item)) {
-                return false;
-            }
-        }
-        return true;
+        if (text == null || list == null || list.isEmpty()) return false;
+        return list.stream()
+                .filter(Objects::nonNull)
+                .allMatch(text::contains);
     }
 
     /*
