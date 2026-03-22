@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileBackBtn = document.getElementById('mobileBackBtn');
     const diffActions = document.getElementById('diffActions');
     const connectionStatus = document.getElementById('connectionStatus');
-    const keyboardShortcutsHint = document.getElementById('keyboardShortcutsHint');
 
     // Controls
     const pauseBtn = document.getElementById('pauseBtn');
@@ -23,10 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let eventSource = null;
     let selectedEvent = null;
-
-    if (keyboardShortcutsHint && (typeof isLoggedIn === 'undefined' || !isLoggedIn)) {
-        keyboardShortcutsHint.classList.add('d-none');
-    }
 
     function isTypingTarget(target) {
         if (!target) return false;
@@ -277,11 +272,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Undo Modal Logic ---
-    const undoModal = new bootstrap.Modal(document.getElementById('undoModal'));
+    const undoModalEl = document.getElementById('undoModal');
+    const undoModal = new bootstrap.Modal(undoModalEl);
     const undoPageTitle = document.getElementById('undoPageTitle');
     const undoSummaryInput = document.getElementById('undoSummary');
     const confirmUndoBtn = document.getElementById('confirmUndoBtn');
     let currentUndoEvent = null;
+
+    undoModalEl.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        if (!undoModalEl.classList.contains('show')) return;
+        if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.target && e.target.closest('[data-bs-dismiss="modal"]')) return;
+        e.preventDefault();
+        if (!confirmUndoBtn.disabled) {
+            confirmUndoBtn.click();
+        }
+    });
 
     function performUndo(event) {
         currentUndoEvent = event;
