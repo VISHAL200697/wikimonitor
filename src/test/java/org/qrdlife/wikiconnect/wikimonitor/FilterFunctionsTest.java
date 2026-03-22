@@ -44,8 +44,17 @@ class FilterFunctionsTest {
     }
 
     @Test
-    void testRegex() {
+    void testMatches() {
         assertTrue(functions.matches("Hello 123", ".*\\d+.*"));
+        assertFalse(functions.matches("Hello World", ".*\\d+.*"));
+        assertFalse(functions.matches(null, ".*\\d+.*"));
+        assertFalse(functions.matches("Hello 123", null));
+        assertFalse(functions.matches(null, null));
+        assertFalse(functions.matches("Hello 123", "[invalid regex"));
+    }
+
+    @Test
+    void testRegex() {
         assertEquals(2, functions.regexCount("test test", "test"));
     }
 
