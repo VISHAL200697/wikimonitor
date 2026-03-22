@@ -5,7 +5,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class FilterFunctions {
 
@@ -211,7 +213,11 @@ public class FilterFunctions {
         if (text == null || regex == null) {
             return false;
         }
-        return Pattern.compile(regex).matcher(text).find();
+        try {
+            return Pattern.compile(regex).matcher(text).find();
+        } catch (PatternSyntaxException e) {
+            return false;
+        }
     }
 
     public int regexCount(String text, String regex) {
@@ -280,29 +286,17 @@ public class FilterFunctions {
     }
 
     public boolean anyContains(String text, List<String> list) {
-        if (text == null || list == null) {
-            return false;
-        }
-
-        for (String item : list) {
-            if (item != null && text.contains(item)) {
-                return true;
-            }
-        }
-        return false;
+        if (text == null || list == null) return false;
+        return list.stream()
+                .filter(Objects::nonNull)
+                .anyMatch(text::contains);
     }
 
     public boolean allContains(String text, List<String> list) {
-        if (text == null || list == null) {
-            return false;
-        }
-
-        for (String item : list) {
-            if (item != null && !text.contains(item)) {
-                return false;
-            }
-        }
-        return true;
+        if (text == null || list == null || list.isEmpty()) return false;
+        return list.stream()
+                .filter(Objects::nonNull)
+                .allMatch(text::contains);
     }
 
     /*
