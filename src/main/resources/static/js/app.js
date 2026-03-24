@@ -544,6 +544,10 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
             parent: textArea.parentNode
         });
+        cmEditor.dom.addEventListener("touchstart", (e) => {
+    e.stopPropagation();
+    cmEditor.focus();
+}, { passive: true });
     }
 
     function spelHint(context) {
