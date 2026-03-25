@@ -544,6 +544,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
             parent: textArea.parentNode
         });
+        cmEditor.dom.addEventListener("touchstart", (e) => {
+            cmEditor.contentDOM.focus();
+        }); 
     }
 
     function spelHint(context) {
