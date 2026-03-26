@@ -26,7 +26,7 @@
         <scribejava.version>8.3.3</scribejava.version>
         <okhttp.version>4.12.0</okhttp.version>
         <diffutils.version>4.12</diffutils.version>
-        <dotenv.version>3.0.0</dotenv.version>
+        <dotenv.version>3.2.0</dotenv.version>
         <mockito.inline.version>5.2.0</mockito.inline.version>
     </properties>
 
