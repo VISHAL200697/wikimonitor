@@ -32,6 +32,9 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
     ACCESS_TOKEN=your_wikidata_access_token
     MEDIAWIKI_CLIENT_ID=your_oauth_client_id
     MEDIAWIKI_CLIENT_SECRET=your_oauth_client_secret
+
+    # Feature Toggles
+    REQUIRE_ROLLBACK_RIGHT=true # Set to false to bypass rollback rights check during local testing
     ```
     *Note: You need to register an OAuth2 consumer on Meta-Wiki or your target MediaWiki instance to obtain the Client ID and Secret. The `ACCESS_TOKEN` is used for initial API interactions or bot actions.*
 

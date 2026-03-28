@@ -6,6 +6,7 @@ import org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication;
 import org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService;
 import org.qrdlife.wikiconnect.wikimonitor.service.OAuth2Service;
 import org.qrdlife.wikiconnect.wikimonitor.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +19,9 @@ public class AuthController {
     private final UserService userService;
 
     private final OAuth2Service oauth2Service;
+
+    @Value("${REQUIRE_ROLLBACK_RIGHT:true}")
+    private boolean requireRollbackRight;
 
     @GetMapping("/login")
     public String login() {
@@ -49,7 +53,7 @@ public class AuthController {
             var mediaWikiService = new MediaWikiService(apiMeta);
             var token = oauth2Service.getAccessToken(code);
             var user = oauth2Service.getUserInfo(token);
-            if (!mediaWikiService.checkAnyRollbackRights(user.getUsername())) {
+            if (requireRollbackRight && !mediaWikiService.checkAnyRollbackRights(user.getUsername())) {
                 return "redirect:/login?error=no_rollback_rights";
             }
 
