@@ -37,6 +37,10 @@ public class OAuth2Service {
         return service.getAccessToken(code);
     }
 
+    public com.github.scribejava.core.model.OAuth2AccessToken refreshAccessToken(String refreshToken) throws Exception {
+        return service.refreshAccessToken(refreshToken);
+    }
+
     /**
      * Fetches the user info (name, id) from Wikimedia.
      *

@@ -58,7 +58,7 @@ public class SecurityConfig {
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/login")
                                                 .invalidateHttpSession(true)
-                                                .deleteCookies("JSESSIONID")
+                                                .deleteCookies("JSESSIONID", "refresh_token")
                                                 .permitAll())
 
                                 .headers(headers -> headers
