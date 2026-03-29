@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalEventCount++;
 
         // Limit list size (keep DOM light)
-        while (eventList.children.length > 100) {
+        if (eventList.children.length > 100) {
             eventList.removeChild(eventList.lastChild);
         }
 
