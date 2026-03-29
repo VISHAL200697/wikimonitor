@@ -82,6 +82,20 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, "&#039;");
     }
 
+    // --- Page Title ---
+    // The DOM keeps at most MAX_VISIBLE cards at a time. New cards are added at
+    // the top; once the count exceeds MAX_VISIBLE the oldest card is dropped from
+    // the bottom. The title shows "100+" as soon as the list hits the cap.
+    const BASE_TITLE = 'WikiMonitor';
+    const MAX_VISIBLE = 100;
+
+    function updatePageTitle() {
+        if (typeof eventList === 'undefined' || !eventList) return;
+        const count = eventList.children.length;
+        const display = count >= MAX_VISIBLE ? `${MAX_VISIBLE}+` : count;
+        document.title = count > 0 ? `${BASE_TITLE} (${display})` : BASE_TITLE;
+    }
+
     // --- SSE Connection ---
     function connect() {
         if (eventSource) return;
@@ -165,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dismissBtn.onclick = (e) => {
             e.stopPropagation();
             card.remove();
+            updatePageTitle();
         };
 
         actionsDiv.appendChild(linksDiv);
@@ -201,9 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
         eventList.insertBefore(card, eventList.firstChild);
 
         // Limit list size (keep DOM light)
-        if (eventList.children.length > 100) {
+        if (eventList.children.length > MAX_VISIBLE) {
             eventList.removeChild(eventList.lastChild);
         }
+
+        updatePageTitle();
     }
 
     function loadDiff(event) {
