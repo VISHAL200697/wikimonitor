@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         eventList.insertBefore(card, eventList.firstChild);
 
         // Limit list size (keep DOM light)
-        if (eventList.children.length > MAX_VISIBLE) {
+        while (eventList.children.length > MAX_VISIBLE) {
             eventList.removeChild(eventList.lastChild);
         }
 
