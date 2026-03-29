@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePageTitle() {
         if (typeof eventList === 'undefined' || !eventList) return;
         const count = eventList.children.length;
-        const display = count >= MAX_VISIBLE ? `${MAX_VISIBLE}+` : count;
+        const display = count > MAX_VISIBLE ? `${MAX_VISIBLE}+` : count;
         document.title = count > 0 ? `${BASE_TITLE} (${display})` : BASE_TITLE;
     }
 
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         eventList.insertBefore(card, eventList.firstChild);
 
         // Limit list size (keep DOM light)
-        if (eventList.children.length > MAX_VISIBLE) {
+        while (eventList.children.length > MAX_VISIBLE) {
             eventList.removeChild(eventList.lastChild);
         }
 
