@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let eventSource = null;
     let selectedEvent = null;
+    let totalEventCount = 0;
 
     function isTypingTarget(target) {
         if (!target) return false;
@@ -80,6 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+
+    // --- Page Title ---
+    const BASE_TITLE = 'WikiMonitor';
+
+    function updatePageTitle() {
+        const display = totalEventCount > 100 ? '100+' : totalEventCount;
+        document.title = totalEventCount > 0 ? `${BASE_TITLE} (${display})` : BASE_TITLE;
     }
 
     // --- SSE Connection ---
@@ -165,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dismissBtn.onclick = (e) => {
             e.stopPropagation();
             card.remove();
+            updatePageTitle();
         };
 
         actionsDiv.appendChild(linksDiv);
@@ -199,11 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Prepend to list
         eventList.insertBefore(card, eventList.firstChild);
+        totalEventCount++;
 
         // Limit list size (keep DOM light)
-        if (eventList.children.length > 100) {
+        while (eventList.children.length > 100) {
             eventList.removeChild(eventList.lastChild);
         }
+
+        updatePageTitle();
     }
 
     function loadDiff(event) {
