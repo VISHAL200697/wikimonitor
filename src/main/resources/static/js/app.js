@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePageTitle() {
         if (typeof eventList === 'undefined' || !eventList) return;
         const count = eventList.children.length;
-        const display = count >= MAX_VISIBLE ? `${MAX_VISIBLE}+` : count;
+        const display = count > MAX_VISIBLE ? `${MAX_VISIBLE}+` : count;
         document.title = count > 0 ? `${BASE_TITLE} (${display})` : BASE_TITLE;
     }
 
