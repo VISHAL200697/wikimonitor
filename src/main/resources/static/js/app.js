@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let eventSource = null;
     let selectedEvent = null;
-    let totalEventCount = 0;
 
     function isTypingTarget(target) {
         if (!target) return false;
@@ -87,8 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const BASE_TITLE = 'WikiMonitor';
 
     function updatePageTitle() {
-        const display = totalEventCount > 100 ? '100+' : totalEventCount;
-        document.title = totalEventCount > 0 ? `${BASE_TITLE} (${display})` : BASE_TITLE;
+        const count = eventList.children.length;
+        const display = count >= 100 ? '100+' : count;
+        document.title = count > 0 ? `${BASE_TITLE} (${display})` : BASE_TITLE;
     }
 
     // --- SSE Connection ---
@@ -209,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Prepend to list
         eventList.insertBefore(card, eventList.firstChild);
-        totalEventCount++;
 
         // Limit list size (keep DOM light)
         if (eventList.children.length > 100) {
