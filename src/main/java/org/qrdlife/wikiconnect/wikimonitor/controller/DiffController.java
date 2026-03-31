@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 @lombok.extern.slf4j.Slf4j
 public class DiffController {
 
+    private final org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication wikiMonitorApplication;
+
     @GetMapping("/api/diff")
     public String getDiff(
             @RequestParam("server") String server,
@@ -17,7 +19,7 @@ public class DiffController {
             @RequestParam("new") Long newRev) {
 
         log.info("Diff request for server: {} revisions {} -> {}", server, oldRev, newRev);
-        var api = org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.getApiMediaWiki("https://" + server + "/w/api.php");
+        var api = wikiMonitorApplication.getApiMediaWiki("https://" + server + "/w/api.php");
         var mediaWikiService = new org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService(api);
         return mediaWikiService.getDiffHtml(oldRev, newRev);
     }

@@ -1,16 +1,12 @@
 package org.qrdlife.wikiconnect.wikimonitor.service;
 
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.qrdlife.wikiconnect.mediawiki.client.ActionApi;
 import org.qrdlife.wikiconnect.mediawiki.client.Requester;
-import org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication;
 
 import java.util.List;
 
@@ -27,23 +23,12 @@ class MediaWikiServiceTest {
     private Requester requester;
 
     private MediaWikiService mediaWikiService;
-    private MockedStatic<WikiMonitorApplication> wikiMonitorApplicationMock;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        // Pass mocked ActionApi to constructor
         mediaWikiService = new MediaWikiService(actionApi);
-
-        wikiMonitorApplicationMock = Mockito.mockStatic(WikiMonitorApplication.class);
-        wikiMonitorApplicationMock.when(() -> WikiMonitorApplication.getApiMediaWiki(anyString()))
-                .thenReturn(actionApi);
         when(actionApi.getRequester()).thenReturn(requester);
-    }
-
-    @AfterEach
-    void tearDown() {
-        wikiMonitorApplicationMock.close();
     }
 
     @Test

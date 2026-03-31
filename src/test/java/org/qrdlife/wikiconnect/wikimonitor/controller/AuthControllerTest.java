@@ -31,6 +31,9 @@ public class AuthControllerTest {
     @MockitoBean
     private OAuth2Service oauth2Service;
 
+    @MockitoBean
+    private org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication wikiMonitorApplication;
+
     @Test
     public void testLogin() throws Exception {
         mockMvc.perform(get("/login"))
@@ -60,17 +63,11 @@ public class AuthControllerTest {
         when(oauth2Service.getUserInfo(any())).thenReturn(mockUser);
         when(userService.findOrCreateUser(anyLong(), anyString())).thenReturn(mockUser);
 
-        try (org.mockito.MockedStatic<org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication> mockedWiki = org.mockito.Mockito
-                .mockStatic(org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.class);
-                org.mockito.MockedConstruction<org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService> mockedMwService = org.mockito.Mockito
+        try (org.mockito.MockedConstruction<org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService> mockedMwService = org.mockito.Mockito
                         .mockConstruction(org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService.class,
                                 (mock, context) -> {
                                     when(mock.checkAnyRollbackRights(anyString())).thenReturn(true);
                                 })) {
-
-            mockedWiki
-                    .when(() -> org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.getApiMediaWiki(anyString()))
-                    .thenReturn(null);
 
             mockMvc.perform(get("/oauth2/callback")
                     .param("code", "auth-code")
@@ -88,14 +85,8 @@ public class AuthControllerTest {
     public void testOauthCallbackError() throws Exception {
         when(oauth2Service.getAccessToken(anyString())).thenThrow(new RuntimeException("OAuth failed"));
 
-        try (org.mockito.MockedStatic<org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication> mockedWiki = org.mockito.Mockito
-                .mockStatic(org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.class);
-                org.mockito.MockedConstruction<org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService> mockedMwService = org.mockito.Mockito
+        try (org.mockito.MockedConstruction<org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService> mockedMwService = org.mockito.Mockito
                         .mockConstruction(org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService.class)) {
-
-            mockedWiki
-                    .when(() -> org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication.getApiMediaWiki(anyString()))
-                    .thenReturn(null);
 
             mockMvc.perform(get("/oauth2/callback")
                     .param("code", "auth-code")

@@ -2,12 +2,9 @@ package org.qrdlife.wikiconnect.wikimonitor.service;
 
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.qrdlife.wikiconnect.mediawiki.client.ActionApi;
 import org.qrdlife.wikiconnect.mediawiki.client.Requester;
@@ -28,24 +25,18 @@ class OAuth2ServiceTest {
     private ActionApi actionApi;
     @Mock
     private Requester requester;
+    @Mock
+    private WikiMonitorApplication wikiMonitorApplication;
 
     private OAuth2Service oauth2Service;
-    private MockedStatic<WikiMonitorApplication> wikiMonitorApplicationMock;
 
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
 
-        wikiMonitorApplicationMock = Mockito.mockStatic(WikiMonitorApplication.class);
-        wikiMonitorApplicationMock.when(WikiMonitorApplication::getOAuth20Service).thenReturn(oauth20Service);
+        when(wikiMonitorApplication.getOAuth20Service()).thenReturn(oauth20Service);
 
-        // We use a spy to mock the getActionApi method which creates new objects
-        oauth2Service = spy(new OAuth2Service());
-    }
-
-    @AfterEach
-    void tearDown() {
-        wikiMonitorApplicationMock.close();
+        oauth2Service = spy(new OAuth2Service(wikiMonitorApplication));
     }
 
     @Test
