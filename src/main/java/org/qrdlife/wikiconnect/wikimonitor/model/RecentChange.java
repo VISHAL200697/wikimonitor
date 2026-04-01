@@ -117,7 +117,7 @@ public class RecentChange {
                 return;
             }
 
-            var api = WikiMonitorApplication.getApiMediaWiki(serverUrl);
+            var api = WikiMonitorApplication.getInstance().getApiMediaWiki(serverUrl);
             var service = new org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService(api);
             var diffContent = service.loadDiff(revision.get("old"), revision.get("new"));
 
@@ -182,7 +182,7 @@ public class RecentChange {
             if (!WikiMonitorApplication.isContextInitialized()) {
                 return java.util.Collections.emptyList();
             }
-            var api = WikiMonitorApplication.getApiMediaWiki(serverUrl);
+            var api = WikiMonitorApplication.getInstance().getApiMediaWiki(serverUrl);
             var service = new org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService(api);
             return service.getUserRights(user);
         } catch (Exception e) {
@@ -199,7 +199,7 @@ public class RecentChange {
             if (!WikiMonitorApplication.isContextInitialized()) {
                 return java.util.Collections.emptyList();
             }
-            var api = WikiMonitorApplication.getApiMediaWiki(serverUrl);
+            var api = WikiMonitorApplication.getInstance().getApiMediaWiki(serverUrl);
             var service = new org.qrdlife.wikiconnect.wikimonitor.service.MediaWikiService(api);
             return service.getUserGroups(user);
         } catch (Exception e) {

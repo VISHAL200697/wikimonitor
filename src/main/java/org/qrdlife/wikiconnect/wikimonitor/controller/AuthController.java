@@ -20,6 +20,8 @@ public class AuthController {
 
     private final OAuth2Service oauth2Service;
 
+    private final WikiMonitorApplication wikiMonitorApplication;
+
     @Value("${REQUIRE_ROLLBACK_RIGHT:true}")
     private boolean requireRollbackRight;
 
@@ -35,7 +37,7 @@ public class AuthController {
                         var token = oauth2Service.refreshAccessToken(refreshToken);
                         var user = oauth2Service.getUserInfo(token);
                         var mediaWikiService = new MediaWikiService(
-                                WikiMonitorApplication.getApiMediaWiki("https://meta.wikimedia.org/w/api.php"));
+                                wikiMonitorApplication.getApiMediaWiki("https://meta.wikimedia.org/w/api.php"));
                         if (!mediaWikiService.checkAnyRollbackRights(user.getUsername())) {
                             return "login";
                         }
@@ -102,7 +104,7 @@ public class AuthController {
         request.getSession().removeAttribute("OAUTH_STATE");
 
         try {
-            var apiMeta = WikiMonitorApplication.getApiMediaWiki("https://meta.wikimedia.org/w/api.php");
+            var apiMeta = wikiMonitorApplication.getApiMediaWiki("https://meta.wikimedia.org/w/api.php");
             var mediaWikiService = new MediaWikiService(apiMeta);
             var token = oauth2Service.getAccessToken(code);
             var user = oauth2Service.getUserInfo(token);

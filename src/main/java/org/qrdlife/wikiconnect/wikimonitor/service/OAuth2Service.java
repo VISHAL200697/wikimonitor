@@ -21,8 +21,8 @@ public class OAuth2Service {
 
     private final OAuth20Service service;
 
-    public OAuth2Service() {
-        this.service = WikiMonitorApplication.getOAuth20Service();
+    public OAuth2Service(WikiMonitorApplication wikiMonitorApplication) {
+        this.service = wikiMonitorApplication.getOAuth20Service();
     }
 
     public String getAuthorizationUrl() {

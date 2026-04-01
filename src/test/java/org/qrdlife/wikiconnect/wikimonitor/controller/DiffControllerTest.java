@@ -17,6 +17,9 @@ public class DiffControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication wikiMonitorApplication;
+
     @Test
     @WithMockUser
     public void testGetDiff() throws Exception {

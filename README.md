@@ -26,16 +26,44 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
     ```
 
 2.  **Configure Environment Variables:**
-    Create a `.env` file in the root directory (same level as `pom.xml`) with the following keys:
-    ```ini
-    # Wikimedia OAuth2 Configuration
+    The application uses standard Spring Boot property resolution. A `.env` file is **not** loaded automatically. You can provide the required variables using any of the following methods:
+
+    **Option A: System environment variables**
+    ```bash
+    export ACCESS_TOKEN=your_wikidata_access_token
+    export MEDIAWIKI_CLIENT_ID=your_oauth_client_id
+    export MEDIAWIKI_CLIENT_SECRET=your_oauth_client_secret
+    export REQUIRE_ROLLBACK_RIGHT=true
+    ```
+
+    **Option B: `application.properties` or `application.yml`**
+    Add the values to `src/main/resources/application.properties`:
+    ```properties
     ACCESS_TOKEN=your_wikidata_access_token
     MEDIAWIKI_CLIENT_ID=your_oauth_client_id
     MEDIAWIKI_CLIENT_SECRET=your_oauth_client_secret
-
-    # Feature Toggles
-    REQUIRE_ROLLBACK_RIGHT=true # Set to false to bypass rollback rights check during local testing
+    REQUIRE_ROLLBACK_RIGHT=true
     ```
+
+    **Option C: Command-line arguments**
+    ```bash
+    java -jar target/wikimonitor.jar \
+      --ACCESS_TOKEN=your_wikidata_access_token \
+      --MEDIAWIKI_CLIENT_ID=your_oauth_client_id \
+      --MEDIAWIKI_CLIENT_SECRET=your_oauth_client_secret \
+      --REQUIRE_ROLLBACK_RIGHT=true
+    ```
+
+    **Option D: IDE run configuration**
+    Add the variables to your IDE's run/debug configuration as environment variables.
+
+    | Variable | Description |
+    |---|---|
+    | `ACCESS_TOKEN` | Wikimedia owner-only OAuth2 access token for API interactions |
+    | `MEDIAWIKI_CLIENT_ID` | OAuth2 client ID registered on Meta-Wiki |
+    | `MEDIAWIKI_CLIENT_SECRET` | OAuth2 client secret |
+    | `REQUIRE_ROLLBACK_RIGHT` | Set to `false` to bypass rollback rights check during local testing (default: `true`) |
+
     *Note: You need to register an OAuth2 consumer on Meta-Wiki or your target MediaWiki instance to obtain the Client ID and Secret. The `ACCESS_TOKEN` is used for initial API interactions or bot actions.*
 
 3.  **Build the project:**
@@ -107,7 +135,7 @@ The application uses `src/main/resources/application.properties` for core settin
 -   **Streaming**: OkHttp (SSE)
 -   **Authentication**: ScribeJava (OAuth2)
 -   **Templating**: Thymeleaf
--   **Utilities**: Java Diff Utils, Jsoup, Caffeine (Caching), Dotenv
+-   **Utilities**: Java Diff Utils, Jsoup, Caffeine (Caching)
 
 ## License
 
