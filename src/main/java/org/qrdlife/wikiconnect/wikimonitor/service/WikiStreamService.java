@@ -134,16 +134,6 @@ public class WikiStreamService {
         if (emitters.isEmpty())
             return;
 
-        String payload;
-        try {
-            ObjectNode node = mapper.valueToTree(rc);
-            node.put("flagged", true);
-            payload = mapper.writeValueAsString(node);
-        } catch (JsonProcessingException e) {
-            log.error("Error serializing RecentChange", e);
-            return;
-        }
-
         emitters.forEach((emitter, context) -> {
             if (context.paused)
                 return;
