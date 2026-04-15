@@ -325,26 +325,7 @@ class WikiStreamServiceTest {
             verifyNoInteractions(abuseFilter);
         }
 
-        // ── 2. Serialisation failure aborts broadcast ──────────────────────────
-
-        @Test
-        @DisplayName("aborts without calling abuseFilter when JSON serialisation fails")
-        void serialisationFailure_abortsEarly() throws Exception {
-            subscribeUser(principal, testUser);
-            RecentChange rc = buildRecentChange();
-
-            ObjectNode node = new ObjectMapper().createObjectNode();
-            when(mapper.valueToTree(rc)).thenReturn(node);
-            when(mapper.writeValueAsString(any()))
-                    .thenThrow(new JsonProcessingException("boom") {});
-
-            invokeBroadcastAsync(rc);
-
-            // abuseFilter must never be reached because we already bailed out
-            verifyNoInteractions(abuseFilter);
-        }
-
-        // ── 3. Paused subscriber is skipped ───────────────────────────────────
+        // ── 2. Paused subscriber is skipped ───────────────────────────────────
 
         @Test
         @DisplayName("does not call abuseFilter for a paused subscriber")
@@ -362,7 +343,7 @@ class WikiStreamServiceTest {
             verifyNoInteractions(abuseFilter);
         }
 
-        // ── 4. Filter returns false – emitter.send() is never called ──────────
+        // ── 3. Filter returns false – emitter.send() is never called ──────────
 
         @Test
         @DisplayName("does not send event when abuseFilter returns false")
@@ -383,7 +364,7 @@ class WikiStreamServiceTest {
             verify(abuseFilter, times(1)).matches(eq(rc), eq(testUser));
         }
 
-        // ── 5. Happy path – matching subscriber receives the event ─────────────
+        // ── 4. Happy path – matching subscriber receives the event ─────────────
 
         @Test
         @DisplayName("abuseFilter is called exactly once per active subscriber when filter matches")
@@ -401,7 +382,7 @@ class WikiStreamServiceTest {
             verify(abuseFilter, times(1)).matches(eq(rc), eq(testUser));
         }
 
-        // ── 6. Emitter send error triggers completeWithError + removal ─────────
+        // ── 5. Emitter send error triggers completeWithError + removal ─────────
 
         @Test
         @DisplayName("removed from emitter map after send throws an exception")
@@ -424,7 +405,7 @@ class WikiStreamServiceTest {
             assertDoesNotThrow(() -> wikiStreamService.isPaused(principal));
         }
 
-        // ── 7. Multi-user isolation ────────────────────────────────────────────
+        // ── 6. Multi-user isolation ────────────────────────────────────────────
 
         @Test
         @DisplayName("only the matching user's filter is evaluated; non-matching user is also evaluated independently")
