@@ -20,6 +20,7 @@ import org.qrdlife.wikiconnect.wikimonitor.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -153,7 +154,14 @@ public class WikiStreamService {
 
                         emitter.send(event);
                     }
+                } catch (JsonProcessingException e) {
+                    log.error("Error serializing RecentChange", e);
+                } catch (IOException e) {
+                    log.warn("Client disconnected", e);
+                    emitter.complete();
+                    emitters.remove(emitter);
                 } catch (Exception e) {
+                    log.error("Unexpected error while broadcasting", e);
                     emitter.completeWithError(e);
                     emitters.remove(emitter);
                 }
