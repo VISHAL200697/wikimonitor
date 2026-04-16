@@ -24,7 +24,8 @@ public class SecurityConfig {
                                                                 "/login",
                                                                 "/oauth2/callback",
                                                                 "/auth/wikimedia",
-                                                                "/access-denied")
+                                                                "/access-denied",
+                                                                "/actuator/health")
                                                 .permitAll()
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                                 .requestMatchers("/").hasRole("USER")
