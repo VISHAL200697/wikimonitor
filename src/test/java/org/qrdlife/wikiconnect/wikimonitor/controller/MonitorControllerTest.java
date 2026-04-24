@@ -29,13 +29,13 @@ public class MonitorControllerTest {
 
     @Test
     public void testStream() throws Exception {
-        when(streamService.subscribe(any())).thenReturn(new SseEmitter());
+        when(streamService.subscribe(any(), any())).thenReturn(new SseEmitter());
 
         mockMvc.perform(get("/stream")
                 .with(user("user").roles("USER")))
                 .andExpect(status().isOk());
 
-        verify(streamService).subscribe(any());
+        verify(streamService).subscribe(any(), any());
     }
 
     @Test

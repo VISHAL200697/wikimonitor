@@ -114,9 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
         eventSource.onerror = (err) => {
             console.error('EventSource failed:', err);
             if (connectionStatus) connectionStatus.classList.remove('connected');
-            eventSource.close();
-            eventSource = null;
-            setTimeout(connect, 5000);
+            // Browser auto-reconnects with Last-Event-ID; only retry manually if it gave up.
+            if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+                eventSource = null;
+                setTimeout(connect, 3000);
+            }
         };
     }
 
