@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,28 +18,6 @@ public class RedisCache {
 
     private final StringRedisTemplate redis;
     private final ObjectMapper mapper;
-
-    public <T> T get(String key, Class<T> type) {
-        try {
-            String json = redis.opsForValue().get(key);
-            if (json == null) {
-                return null;
-            }
-            return mapper.readValue(json, type);
-        } catch (Exception e) {
-            log.warn("Redis GET failed for key [{}]: {}", key, e.getMessage());
-            return null;
-        }
-    }
-
-    public void set(String key, Object value, Duration ttl) {
-        try {
-            String json = mapper.writeValueAsString(value);
-            redis.opsForValue().set(key, json, ttl);
-        } catch (Exception e) {
-            log.warn("Redis SET failed for key [{}]: {}", key, e.getMessage());
-        }
-    }
 
     public void appendToList(String key, Object value, int maxSize) {
         try {

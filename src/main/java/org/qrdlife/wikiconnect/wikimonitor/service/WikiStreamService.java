@@ -402,10 +402,6 @@ public class WikiStreamService {
                 .forEach(ctx -> ctx.user = updatedUser);
     }
 
-    long getSseTimeoutMs() {
-        return sseTimeoutMs;
-    }
-
     @PreDestroy
     public void cleanup() {
         // Set first so in-flight callbacks bail out before touching Redis.
