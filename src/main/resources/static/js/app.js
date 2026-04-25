@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let eventSource = null;
     let selectedEvent = null;
+    let retryDelayMs = 3000;
+    const MIN_RETRY_DELAY_MS = 3000;
+    const MAX_RETRY_DELAY_MS = 60000;
 
     function isTypingTarget(target) {
         if (!target) return false;
@@ -103,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         eventSource.onopen = () => {
             if (connectionStatus) connectionStatus.classList.add('connected');
+            retryDelayMs = MIN_RETRY_DELAY_MS; //reset value back to MIN_RETRY_DELAY_MS for successful re-connection
         };
 
         eventSource.onmessage = (event) => {
@@ -117,7 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Browser auto-reconnects with Last-Event-ID; only retry manually if it gave up.
             if (eventSource && eventSource.readyState === EventSource.CLOSED) {
                 eventSource = null;
-                setTimeout(connect, 3000);
+                const jitter = Math.random() * (retryDelayMs / 2);
+                const delay = retryDelayMs + jitter;
+                setTimeout(connect, delay);
+                retryDelayMs = Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS);
             }
         };
     }
