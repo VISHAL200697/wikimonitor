@@ -18,6 +18,23 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            become wikimonitor-beta bash -c "
-              toolforge build start https://github.com/${{ github.repository }} --ref ${{ github.ref_name }};
-              toolforge webservice buildservice restart"
+            become wikimonitor-beta bash -c '
+              set -e
+
+              REPO="https://github.com/${{ github.repository }}"
+              REF="${{ github.ref_name }}"
+
+              dologmsg "[DEPLOY] Starting deployment | repo=$REPO | ref=$REF"
+
+              toolforge build start "$REPO" --ref "$REF"
+
+              dologmsg "[DEPLOY] Build triggered successfully | ref=$REF"
+
+              restart
+
+              dologmsg "[DEPLOY] Restarting buildservice | ref=$REF"
+
+              toolforge webservice buildservice restart
+
+              dologmsg "[DEPLOY] Deployment completed successfully | ref=$REF"
+            '
