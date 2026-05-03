@@ -2,7 +2,11 @@ name: Trigger Toolforge Build
 
 on:
   workflow_dispatch:
-
+    inputs:
+      reason:
+        description: 'Reason for deployment (optional)'
+        required: false
+        default: ''
 jobs:
   trigger-build:
     runs-on: ubuntu-latest
@@ -18,7 +22,23 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            become wikimonitor bash -c "
-              toolforge build start https://github.com/${{ github.repository }} --ref ${{ github.ref_name }};
-              toolforge webservice buildservice restart"
+            become wikimonitor bash << 'EOF'
+            set -e
+            
+            REPO="https://github.com/${{ github.repository }}"
+            REF="${{ github.ref_name }}"
+            REASON="${{ github.event.inputs.reason }}"
+            SCRIPT_URL="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/deploy-toolforge.sh"
+            
+            echo "--> Downloading deployment script from branch: $REF"
+            wget -q -O deploy-toolforge.sh "$SCRIPT_URL"
+            
+            chmod +x deploy-toolforge.sh
+            
+            echo "--> Triggering build in background..."
+            nohup ./deploy-toolforge.sh "$REPO" "$REF" "$REASON" > deployment.log 2>&1 &
+            
+            sleep 2
+            echo "--> Done! Build is running on Toolforge. Check deployment.log for status."
+            EOF
 
