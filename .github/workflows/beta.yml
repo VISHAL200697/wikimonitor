@@ -2,7 +2,11 @@ name: Trigger Toolforge Build Beta
 
 on:
   workflow_dispatch:
-
+    inputs:
+      reason:
+        description: 'Reason for deployment (optional)'
+        required: false
+        default: ''
 jobs:
   trigger-build:
     runs-on: ubuntu-latest
@@ -18,23 +22,22 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            become wikimonitor-beta bash -c '
-              set -e
-
-              REPO="https://github.com/${{ github.repository }}"
-              REF="${{ github.ref_name }}"
-
-              dologmsg "[DEPLOY] Starting deployment | repo=$REPO | ref=$REF"
-
-              toolforge build start "$REPO" --ref "$REF"
-
-              dologmsg "[DEPLOY] Build triggered successfully | ref=$REF"
-
-              restart
-
-              dologmsg "[DEPLOY] Restarting buildservice | ref=$REF"
-
-              toolforge webservice buildservice restart
-
-              dologmsg "[DEPLOY] Deployment completed successfully | ref=$REF"
-            '
+            become wikimonitor-beta bash << 'EOF'
+            set -e
+            
+            REPO="https://github.com/${{ github.repository }}"
+            REF="${{ github.ref_name }}"
+            REASON="${{ github.event.inputs.reason }}"
+            SCRIPT_URL="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/deploy-toolforge.sh"
+            
+            echo "--> Downloading deployment script from branch: $REF"
+            wget -q -O deploy-toolforge.sh "$SCRIPT_URL"
+            
+            chmod +x deploy-toolforge.sh
+            
+            echo "--> Triggering build in background..."
+            nohup ./deploy-toolforge.sh "$REPO" "$REF" "$REASON" > deployment.log 2>&1 &
+            
+            sleep 2
+            echo "--> Done! Build is running on Toolforge. Check deployment.log for status."
+            EOF
