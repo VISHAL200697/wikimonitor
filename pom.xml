@@ -134,6 +134,12 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Redis (for SSE event replay cache) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

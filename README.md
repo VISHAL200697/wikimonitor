@@ -16,6 +16,7 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
 -   **Java**: Version 21 or higher.
 -   **Diff Utilities**: `diff` command line tool (usually available on Linux/Unix).
 -   **Wikimedia Account**: Required for OAuth2 authentication.
+-   **Redis**: Used as a short-window replay cache so SSE clients can resume their event stream after the 30-minute connection rotation without losing flagged edits. On Toolforge the shared instance at `redis.svc.tools.eqiad1.wikimedia.cloud:6379` is used by default; locally you can run `redis-server` and override `REDIS_HOST`/`REDIS_PORT`.
 
 ## Installation
 
@@ -63,6 +64,12 @@ WikiMonitor is a comprehensive tool designed to monitor Wikimedia's RecentChange
     | `MEDIAWIKI_CLIENT_ID` | OAuth2 client ID registered on Meta-Wiki |
     | `MEDIAWIKI_CLIENT_SECRET` | OAuth2 client secret |
     | `REQUIRE_ROLLBACK_RIGHT` | Set to `false` to bypass rollback rights check during local testing (default: `true`) |
+    | `SSE_TIMEOUT_MS` | Per-client SSE connection timeout in milliseconds (default: `1800000`, i.e. 30 minutes). On timeout the browser auto-reconnects with `Last-Event-ID` and the server replays missed events. |
+    | `SSE_EVENT_CACHE_MAX_SIZE` | Max number of recent events kept in the Redis replay cache (default: `1000`) |
+    | `SSE_REDIS_KEY_PREFIX` | Prefix for Redis keys to namespace per deployment (default: `wikimonitor`) |
+    | `REDIS_HOST` | Redis host (default: `redis.svc.tools.eqiad1.wikimedia.cloud` — Toolforge shared Redis) |
+    | `REDIS_PORT` | Redis port (default: `6379`) |
+    | `REDIS_PASSWORD` | Redis password if required (default: empty) |
 
     *Note: You need to register an OAuth2 consumer on Meta-Wiki or your target MediaWiki instance to obtain the Client ID and Secret. The `ACCESS_TOKEN` is used for initial API interactions or bot actions.*
 

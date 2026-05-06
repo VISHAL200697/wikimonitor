@@ -14,11 +14,15 @@ import org.qrdlife.wikiconnect.wikimonitor.model.User;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.Principal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -41,6 +45,8 @@ class WikiStreamServiceTest {
     @Mock
     private UserService userService;
     @Mock
+    private RedisCache redisCache;
+    @Mock
     private Principal principal;
 
     // ── SUT ───────────────────────────────────────────────────────────────────
@@ -53,7 +59,9 @@ class WikiStreamServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        wikiStreamService = new WikiStreamService(mapper, abuseFilter, userService);
+        wikiStreamService = new WikiStreamService(
+                mapper, abuseFilter, userService, redisCache,
+                1_800_000L, 1000, "wikimonitor-test");
 
         testUser = new User();
         testUser.setId(1L);
@@ -279,7 +287,7 @@ class WikiStreamServiceTest {
         @BeforeEach
         void setUp() throws Exception {
             broadcastAsync = WikiStreamService.class
-                    .getDeclaredMethod("broadcastAsync", RecentChange.class);
+                    .getDeclaredMethod("broadcastAsync", RecentChange.class, String.class);
             broadcastAsync.setAccessible(true);
         }
 
@@ -307,7 +315,7 @@ class WikiStreamServiceTest {
          * complete).  If no latch synchronisation is needed, pass {@code null}.
          */
         private void invokeBroadcastAsync(RecentChange rc) throws Exception {
-            broadcastAsync.invoke(wikiStreamService, rc);
+            broadcastAsync.invoke(wikiStreamService, rc, "evt-1");
             // Give the executor pool time to finish its work.
             Thread.sleep(200);
         }
@@ -427,6 +435,86 @@ class WikiStreamServiceTest {
 
             verify(abuseFilter, times(1)).matches(eq(rc), eq(testUser));
             verify(abuseFilter, times(1)).matches(eq(rc), eq(anotherUser));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // subscribe(Principal, Last-Event-ID) — resumption / replay
+    // ══════════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("subscribe() with Last-Event-ID")
+    class SubscribeWithResumption {
+
+        @Test
+        @DisplayName("does not query Redis when no Last-Event-ID is supplied")
+        void noLastEventId_skipsReplay() {
+            when(principal.getName()).thenReturn("alice");
+            when(userService.loadUserByUsername("alice")).thenReturn(testUser);
+
+            wikiStreamService.subscribe(principal, null);
+
+            verify(redisCache, never()).rangeFromList(anyString());
+        }
+
+        @Test
+        @DisplayName("does not query Redis when Last-Event-ID is empty")
+        void emptyLastEventId_skipsReplay() {
+            when(principal.getName()).thenReturn("alice");
+            when(userService.loadUserByUsername("alice")).thenReturn(testUser);
+
+            wikiStreamService.subscribe(principal, "");
+
+            verify(redisCache, never()).rangeFromList(anyString());
+        }
+
+        @Test
+        @DisplayName("queries Redis with the configured key when Last-Event-ID is supplied")
+        void withLastEventId_queriesRedisWithConfiguredKey() {
+            when(principal.getName()).thenReturn("alice");
+            when(userService.loadUserByUsername("alice")).thenReturn(testUser);
+            when(redisCache.rangeFromList("wikimonitor-test:sse:events"))
+                    .thenReturn(java.util.Collections.emptyList());
+
+            wikiStreamService.subscribe(principal, "evt-42");
+
+            verify(redisCache, times(1)).rangeFromList("wikimonitor-test:sse:events");
+        }
+
+        @Test
+        @DisplayName("anonymous client never triggers a replay")
+        void anonymous_noReplay() {
+            wikiStreamService.subscribe(null, "evt-42");
+
+            verify(redisCache, never()).rangeFromList(anyString());
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // cleanup() — graceful shutdown
+    // ══════════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("cleanup()")
+    class Cleanup {
+
+        @Test
+        @DisplayName("sets shuttingDown=true and prevents further Redis writes")
+        void cleanupSetsShuttingDownAndBlocksRedisWrites() throws Exception {
+            wikiStreamService.cleanup();
+
+            Field flag = WikiStreamService.class.getDeclaredField("shuttingDown");
+            flag.setAccessible(true);
+            assertTrue((Boolean) flag.get(wikiStreamService),
+                    "shuttingDown must be true after cleanup");
+
+            // Invoking the upstream-event path post-shutdown must not write to Redis.
+            Method cacheEvent = WikiStreamService.class
+                    .getDeclaredMethod("cacheEvent", String.class, RecentChange.class);
+            cacheEvent.setAccessible(true);
+            RecentChange rc = new RecentChange();
+            rc.setId(1L);
+            cacheEvent.invoke(wikiStreamService, "evt-after-shutdown", rc);
+
+            verify(redisCache, never()).appendToList(anyString(), any(), anyInt());
         }
     }
 }
