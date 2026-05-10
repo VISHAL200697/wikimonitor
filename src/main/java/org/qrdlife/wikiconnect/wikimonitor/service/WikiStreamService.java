@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.qrdlife.wikiconnect.wikimonitor.WikiMonitorApplication;
 import org.qrdlife.wikiconnect.wikimonitor.model.RecentChange;
+import org.qrdlife.wikiconnect.wikimonitor.model.StreamEventDTO;
 import org.qrdlife.wikiconnect.wikimonitor.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -223,10 +224,8 @@ public class WikiStreamService {
         if (matchedFilters.isEmpty()) {
             return;
         }
-        ObjectNode node = mapper.valueToTree(rc);
-        node.put("flagged", true);
-        node.putPOJO("matchedFilters", matchedFilters);
-        String userPayload = mapper.writeValueAsString(node);
+        StreamEventDTO dto = StreamEventDTO.fromRecentChange(rc, matchedFilters);
+        String userPayload = mapper.writeValueAsString(dto);
 
         SseEmitter.SseEventBuilder event = SseEmitter.event()
                 .id(eventId)

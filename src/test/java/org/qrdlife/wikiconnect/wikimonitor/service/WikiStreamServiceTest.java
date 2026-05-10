@@ -2,7 +2,6 @@ package org.qrdlife.wikiconnect.wikimonitor.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -342,8 +341,6 @@ class WikiStreamServiceTest {
             wikiStreamService.setPaused(principal, true);
 
             RecentChange rc = buildRecentChange();
-            ObjectNode node = new ObjectMapper().createObjectNode();
-            when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
 
             invokeBroadcastAsync(rc);
@@ -361,8 +358,6 @@ class WikiStreamServiceTest {
             wikiStreamService.subscribe(principal);
 
             RecentChange rc = buildRecentChange();
-            ObjectNode node = new ObjectMapper().createObjectNode();
-            when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
             when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of());
 
@@ -380,8 +375,6 @@ class WikiStreamServiceTest {
             subscribeUser(principal, testUser);
 
             RecentChange rc = buildRecentChange();
-            ObjectNode node = new ObjectMapper().createObjectNode();
-            when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
             when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of("Test Filter"));
 
@@ -398,8 +391,6 @@ class WikiStreamServiceTest {
             subscribeUser(principal, testUser);
 
             RecentChange rc = buildRecentChange();
-            ObjectNode node = new ObjectMapper().createObjectNode();
-            when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
             // Make abuseFilter return true so we actually try to send
             when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of("Test Filter"));
@@ -424,8 +415,6 @@ class WikiStreamServiceTest {
             subscribeUser(principalBob, anotherUser); // bob
 
             RecentChange rc = buildRecentChange();
-            ObjectNode node = new ObjectMapper().createObjectNode();
-            when(mapper.valueToTree(rc)).thenReturn(node);
             when(mapper.writeValueAsString(any())).thenReturn("{\"flagged\":true}");
 
             when(abuseFilter.matches(eq(rc), eq(testUser))).thenReturn(java.util.List.of("Test Filter"));
